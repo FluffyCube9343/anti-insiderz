@@ -4,8 +4,8 @@ A pari-mutuel prediction market that rejects trades from restricted insiders. Ev
 
 ## Run it
 
-1. Create a Supabase project and run [`supabase/migrations/0001_market.sql`](supabase/migrations/0001_market.sql) in its SQL editor.
-2. Copy `.env.example` to `.env.local` and populate every integration value. The server fails closed if any are missing.
+1. Create a Supabase project and run [`supabase/migrations/0001_market.sql`](supabase/migrations/0001_market.sql) in its SQL editor, then run [`supabase/seed-demo-markets.sql`](supabase/seed-demo-markets.sql).
+2. Copy `.env.example` to `.env.local` and add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. You can browse markets and the audit panel at this stage. Trade submission fails closed until its ANS and Nessie values are present.
 3. Seed real ANS-registered identities and their Nessie account IDs in `agent_identities`, then create the two demo markets in `markets`. ANS must report each identity as `ACTIVE`.
 4. `npm install`, `npm test`, then `npm run dev`.
 
