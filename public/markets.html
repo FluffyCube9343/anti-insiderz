@@ -206,12 +206,12 @@
 "use strict";
 const get = id => document.getElementById(id);
 const markets = [
-  { category: "SPORTS", title: "Will Virginia Tech beat UVA this weekend?", yes: 55, restricted: false, info: "Demo resolution: YES if Virginia Tech wins the named game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
-  { category: "SPORTS", title: "Will Virginia Tech beat Maryland today?", yes: 57, restricted: false, info: "Demo resolution: YES if Virginia Tech wins the named game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
-  { category: "POLITICS", title: "Will the VA governor sign the trade bill?", yes: 40, restricted: true, info: "Demo resolution: YES if the governor signs the named bill before its deadline. Government officials and household members (va-politician-household) are restricted - this is Maya's blocked market." },
-  { category: "POLITICS", title: "Will the VA governor call a special session this year?", yes: 25, restricted: true, info: "Demo resolution: YES if the governor formally calls a special session before Dec 31. Government officials and household members (va-politician-household) are restricted." },
-  { category: "CRYPTO", title: "Will BTC close above $81,000 on Sep 25 at 5pm ET?", yes: 51, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price closes above $81,000 at the stated time; otherwise NO." },
-  { category: "CRYPTO", title: "Will BTC close above $82,000 on Sep 20?", yes: 43, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price closes above $82,000 on the stated date; otherwise NO." }
+  { category: "SPORTS", title: "Will Virginia Tech beat Maryland today?", yes: 57, restricted: false, slug: "cfb-vtech-mary-2026-09-19", liveOutcome: "Virginia Tech", info: "Live Polymarket odds. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
+  { category: "SPORTS", title: "Will Virginia Tech beat UVA this weekend?", yes: 55, restricted: false, info: "Static demo price - no live market found for this game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
+  { category: "POLITICS", title: "Will the Virginia abortion protection amendment pass?", yes: 90, restricted: true, slug: "will-the-virginia-abortion-protection-amendment-pass", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted - this is Maya's blocked market." },
+  { category: "POLITICS", title: "Will a new Virginia congressional map be used in the midterms?", yes: 4, restricted: true, slug: "new-virginia-congressional-map-used-in-the-midterms", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted." },
+  { category: "CRYPTO", title: "Will Bitcoin be above $80,000 on September 25?", yes: 57, restricted: false, slug: "bitcoin-above-80k-on-september-25-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Resolves on the reference BTC/USD price at the stated date." },
+  { category: "CRYPTO", title: "Will Ethereum be above $3,000 on September 25?", yes: 5, restricted: false, slug: "ethereum-above-3000-on-september-25-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Resolves on the reference ETH/USD price at the stated date." }
 ];
 let active = 0;
 let side = "yes";
@@ -256,13 +256,16 @@ function decideProposal(decision) {
   get("proposal-status").textContent = decision + " in simulation · " + reason +
     " · No market published. Production decisions require verified evidence and an authorized reviewer.";
 }
+function renderList() {
 get("list").innerHTML = markets.map((m, i) => `
   <button type="button" class="market card" onclick="openTicket(${i})" style="width:100%;text-align:left;color:var(--ink);font:inherit">
-    <span><span class="label">${m.category}</span><strong style="display:block;margin:8px 0">${m.title}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
+    <span><span class="label">${m.category}${m.live ? " · LIVE ODDS" : ""}</span><strong style="display:block;margin:8px 0">${m.title}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
     <span><span class="label">Yes</span><span class="quote" style="display:block">${m.yes}¢</span></span>
     <span><span class="label">No</span><span class="quote" style="display:block">${100 - m.yes}¢</span></span>
     <span class="muted">Review →<small style="display:block;color:var(--warning)">◷ Evidence review pending</small></span>
   </button>`).join("");
+}
+renderList();
 function openTicket(i) {
   previousFocus = document.activeElement;
   active = i;
@@ -359,6 +362,22 @@ function toggleTheme() {
   localStorage.theme = root.dataset.theme;
 }
 document.documentElement.dataset.theme = localStorage.theme || "light";
+async function refreshLiveOdds() {
+  for (const m of markets) {
+    if (!m.slug) continue;
+    try {
+      const r = await fetch("/api/odds/" + encodeURIComponent(m.slug));
+      if (!r.ok) continue;
+      const d = await r.json();
+      const target = (m.liveOutcome || "Yes").toLowerCase();
+      const o = (d.outcomes || []).find(x => String(x.name).toLowerCase() === target);
+      if (o && Number.isFinite(o.price)) { m.yes = Math.round(o.price * 100); m.live = true; }
+    } catch (e) { /* Polymarket unreachable - static demo price stays */ }
+  }
+  renderList();
+}
+refreshLiveOdds();
+setInterval(refreshLiveOdds, 10000);
 if (sessionStorage.getItem("mayaVerified") !== "yes") location.replace("login.html");
 
 </script>
