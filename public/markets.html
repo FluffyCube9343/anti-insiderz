@@ -206,11 +206,12 @@
 "use strict";
 const get = id => document.getElementById(id);
 const markets = [
-  { category: "CRYPTO", title: "Will Bitcoin reach $90,000 by month end?", yes: 51, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price reaches $90,000 before the stated month ends; otherwise NO." },
-  { category: "SPORTS", title: "Will Buffalo win the championship?", yes: 12, restricted: false, info: "Demo resolution: YES if Buffalo wins the named championship. A cancelled event is voided." },
-  { category: "POLITICS", title: "Will the proposed government legislation pass?", yes: 17, restricted: true, info: "Demo resolution: YES if the proposed legislation receives final passage before its deadline. Government employees are restricted under this demo market's affiliation policy." },
-  { category: "ECONOMY", title: "Will the next inflation release exceed 3%?", yes: 36, restricted: true, info: "Demo resolution: use the initial official year-over-year CPI release. This government-policy market is restricted for Maya." },
-  { category: "TECH", title: "Will an AI model exceed the published benchmark?", yes: 44, restricted: false, info: "Demo resolution: YES on a publicly reproducible benchmark result before the deadline; otherwise NO." }
+  { category: "SPORTS", title: "Will Virginia Tech beat UVA this weekend?", yes: 55, restricted: false, info: "Demo resolution: YES if Virginia Tech wins the named game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
+  { category: "SPORTS", title: "Will Virginia Tech beat Maryland today?", yes: 57, restricted: false, info: "Demo resolution: YES if Virginia Tech wins the named game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
+  { category: "POLITICS", title: "Will the VA governor sign the trade bill?", yes: 40, restricted: true, info: "Demo resolution: YES if the governor signs the named bill before its deadline. Government officials and household members (va-politician-household) are restricted - this is Maya's blocked market." },
+  { category: "POLITICS", title: "Will the VA governor call a special session this year?", yes: 25, restricted: true, info: "Demo resolution: YES if the governor formally calls a special session before Dec 31. Government officials and household members (va-politician-household) are restricted." },
+  { category: "CRYPTO", title: "Will BTC close above $81,000 on Sep 25 at 5pm ET?", yes: 51, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price closes above $81,000 at the stated time; otherwise NO." },
+  { category: "CRYPTO", title: "Will BTC close above $82,000 on Sep 20?", yes: 43, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price closes above $82,000 on the stated date; otherwise NO." }
 ];
 let active = 0;
 let side = "yes";
