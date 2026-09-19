@@ -1,4 +1,29 @@
 import { NextResponse } from "next/server";
-import { supabaseConfig } from "@/lib/config";
-import { createClient } from "@supabase/supabase-js";
-export async function GET() { try { const c = supabaseConfig(); const db = createClient(c.supabaseUrl, c.supabaseServiceKey, { auth: { persistSession: false } }); const { data, error } = await db.from("trade_decisions").select("*").order("sequence", { ascending: false }).limit(100); if (error) throw error; return NextResponse.json(data.map(d => ({ tradeId: d.trade_id, decision: d.decision, reasons: d.reasons, timestamp: d.created_at, hashPrev: d.hash_prev, hash: d.hash }))); } catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 }); } }
+import { database } from "@/lib/db";
+import { decisionFromRow } from "@/lib/providers";
+import { unavailable } from "@/lib/http";
+import { sha256 } from "@/lib/crypto";
+export const dynamic="force-dynamic";
+export async function GET(request:Request) {
+  try {
+    const url=new URL(request.url);const after=Number(url.searchParams.get("after")||0);
+    if(!Number.isSafeInteger(after)||after<0)return NextResponse.json({error:"Invalid audit cursor."},{status:400});
+    const db=database();
+    const {data,error}=await db.from("trade_decisions").select("*").gt("sequence",after).order("sequence").limit(200);
+    if(error)throw error;
+    const {data:prior,error:priorError}=after ? await db.from("trade_decisions").select("hash").lte("sequence",after).order("sequence",{ascending:false}).limit(1).maybeSingle():{data:null,error:null};
+    if(priorError)throw priorError;
+    let previous=prior?.hash ?? null;
+    const rows=data.map(d=>{
+      const linkValid=d.hash_prev===previous;
+      let payloadValid:boolean|null=null;
+      if(d.canonical_payload) {
+        try {const p=JSON.parse(d.canonical_payload);payloadValid=sha256(d.canonical_payload)===d.hash && p.hashPrev===d.hash_prev && p.tradeId===d.trade_id && p.decision===d.decision && Date.parse(p.timestamp)===Date.parse(d.created_at) && JSON.stringify(p.reasons)===JSON.stringify(d.reasons) && JSON.stringify(p.trade)===JSON.stringify(d.trade_data);}
+        catch{payloadValid=false;}
+      }
+      previous=d.hash;
+      return {...decisionFromRow(d),integrity:!linkValid||payloadValid===false?"invalid":payloadValid===null?"legacy":"verified",trade:d.trade_data};
+    });
+    return NextResponse.json({decisions:rows,nextCursor:data.at(-1)?.sequence ?? after,hasMore:data.length===200},{headers:{"Cache-Control":"no-store"}});
+  } catch(e){return unavailable(e);}
+}

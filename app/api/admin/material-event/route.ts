@@ -1,4 +1,14 @@
 import { NextResponse } from "next/server";
-import { supabaseConfig } from "@/lib/config";
-import { createClient } from "@supabase/supabase-js";
-export async function POST(request: Request) { try { const c = supabaseConfig(); if (request.headers.get("x-demo-key") !== process.env.ADMIN_DEMO_KEY) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const body = await request.json() as { marketId?: string; materialEventAt?: string | null }; if (!body.marketId) return NextResponse.json({ error: "marketId is required" }, { status: 400 }); const db = createClient(c.supabaseUrl, c.supabaseServiceKey, { auth: { persistSession: false } }); const { error } = await db.from("markets").update({ material_event_at: body.materialEventAt ?? new Date().toISOString() }).eq("market_id", body.marketId); if (error) throw error; return NextResponse.json({ ok: true }); } catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 }); } }
+import { database } from "@/lib/db";
+import { adminAuthorized, unavailable } from "@/lib/http";
+import { uuid } from "@/lib/validation";
+export async function POST(request:Request) {
+  if(!adminAuthorized(request))return NextResponse.json({error:"Valid admin key required."},{status:401});
+  const body=await request.json().catch(()=>null);
+  if(!body || !uuid.test(body.marketId) || typeof body.materialEventAt!=="string" || !Number.isFinite(Date.parse(body.materialEventAt)))return NextResponse.json({error:"Market UUID and valid materialEventAt timestamp required."},{status:400});
+  try {
+    const {data,error}=await database().from("markets").update({material_event_at:body.materialEventAt}).eq("market_id",body.marketId).eq("status","open").select("market_id").maybeSingle();
+    if(error)throw error;if(!data)return NextResponse.json({error:"Open market not found."},{status:404});
+    return NextResponse.json({ok:true});
+  }catch(e){return unavailable(e);}
+}
