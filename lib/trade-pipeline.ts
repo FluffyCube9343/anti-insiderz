@@ -18,15 +18,15 @@ export class TradePipeline {
     try { registration = await this.ans.validate(agent); } catch (error) { return block(`ANS identity validation could not be completed: ${error instanceof Error ? error.message : "unknown registry error"}`); }
     if (!registration.valid) return block(`ANS identity validation failed${registration.reason ? `: ${registration.reason}` : "."}`);
     if (registration.publicKey && registration.publicKey.trim() !== agent.publicKey.trim()) return block("ANS identity validation failed: the registry public key differs from the registered key.");
-    // 4. Never submit a transfer without an observed sufficient balance.
+    const market = await this.store.getMarket(trade.marketId);
+    if (!market || market.status !== "open") return block("Market is not open for trading.");
+    // 4. A declared affiliation match is a hard exclusion - checked before any money movement.
+    const forbidden = agent.affiliations.find(a => market.restrictedAffiliations.some(r => r.toLowerCase() === a.toLowerCase()));
+    if (forbidden) return block(`Affiliation check blocked trade: agent is affiliated with restricted party \"${forbidden}\".`);
+    // 5. Never submit a transfer without an observed sufficient balance.
     let balance: number;
     try { balance = await this.payments.balance(agent.walletId); } catch (error) { return block(`Solvency check could not be completed: ${error instanceof Error ? error.message : "unknown Nessie error"}`); }
     if (balance < trade.amount) return block(`Solvency check failed: available balance ${balance} is less than requested amount ${trade.amount}.`);
-    const market = await this.store.getMarket(trade.marketId);
-    if (!market || market.status !== "open") return block("Market is not open for trading.");
-    // 5. A declared affiliation match is a hard exclusion.
-    const forbidden = agent.affiliations.find(a => market.restrictedAffiliations.some(r => r.toLowerCase() === a.toLowerCase()));
-    if (forbidden) return block(`Affiliation check blocked trade: agent is affiliated with restricted party \"${forbidden}\".`);
     // 6. Timing is auditable but intentionally non-blocking.
     const inWindow = market.materialEventAt && new Date(market.materialEventAt).getTime() - new Date(trade.timestamp).getTime() <= this.timingWindowMinutes * 60_000 && new Date(market.materialEventAt).getTime() >= new Date(trade.timestamp).getTime();
     if (inWindow) reasons.push(`Timing flag: trade is within ${this.timingWindowMinutes} minutes of the material event.`);
