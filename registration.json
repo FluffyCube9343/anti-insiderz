@@ -1,0 +1,49 @@
+{
+  "agentId": "bb21de26-38d3-46af-bf7f-83fed3df5abc",
+  "agentDisplayName": "Not An Insider Agent",
+  "agentHost": "not-an-insider-just-lucky.biz",
+  "agentDescription": "Verifiable hackathon agent",
+  "ansName": "ans://v1.0.0.not-an-insider-just-lucky.biz",
+  "version": "1.0.0",
+  "agentStatus": {
+    "status": "ACTIVE",
+    "createdAt": "0001-01-01T00:00:00Z",
+    "updatedAt": "0001-01-01T00:00:00Z",
+    "expiresAt": "0001-01-01T00:00:00Z"
+  },
+  "endpoints": [
+    {
+      "agentUrl": "https://not-an-insider-just-lucky.biz/mcp",
+      "metaDataUrl": "https://not-an-insider-just-lucky.biz/.well-known/agent-card.json",
+      "protocol": "MCP",
+      "transports": [
+        "STREAMABLE-HTTP"
+      ],
+      "functions": [
+        {
+          "id": "main",
+          "name": "Primary agent function",
+          "tags": [
+            "hackathon"
+          ]
+        }
+      ]
+    }
+  ],
+  "registrationTimestamp": "2026-09-19T14:03:38.785087Z",
+  "lastRenewalTimestamp": "0001-01-01T00:00:00Z",
+  "links": [
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/bb21de26-38d3-46af-bf7f-83fed3df5abc",
+      "rel": "self"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/bb21de26-38d3-46af-bf7f-83fed3df5abc/certificates/server",
+      "rel": "server-certificates"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/bb21de26-38d3-46af-bf7f-83fed3df5abc/certificates/identity",
+      "rel": "identity-certificates"
+    }
+  ]
+}
