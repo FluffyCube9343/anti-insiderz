@@ -1,9 +1,4 @@
 import { NextResponse } from "next/server";
-import { database } from "@/lib/db";
-import { marketFromRow } from "@/lib/providers";
-import { unavailable } from "@/lib/http";
-export const dynamic="force-dynamic";
-export async function GET() {
-  try {const {data,error}=await database().from("markets").select("*").order("market_id");if(error)throw error;return NextResponse.json(data.map(marketFromRow),{headers:{"Cache-Control":"no-store"}});}
-  catch(e){return unavailable(e);}
-}
+import { supabaseConfig } from "@/lib/config";
+import { createClient } from "@supabase/supabase-js";
+export async function GET() { try { const c = supabaseConfig(); const db = createClient(c.supabaseUrl, c.supabaseServiceKey, { auth: { persistSession: false } }); const { data, error } = await db.from("markets").select("*").eq("status", "open").order("material_event_at", { ascending: true }); if (error) throw error; return NextResponse.json(data.map(m => ({ marketId: m.market_id, subject: m.subject, restrictedAffiliations: m.restricted_affiliations, pool: { outcomeA: Number(m.outcome_a_total), outcomeB: Number(m.outcome_b_total) }, status: m.status, materialEventAt: m.material_event_at }))); } catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 }); } }

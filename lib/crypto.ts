@@ -6,12 +6,7 @@ export function canonicalTradePayload(trade: Omit<TradeRequest, "signature">): s
 }
 
 export function verifyTradeSignature(trade: TradeRequest, publicKey: string): boolean {
-  try {
-    const key=crypto.createPublicKey(publicKey);
-    if(key.asymmetricKeyType==="rsa")return crypto.verify("sha256",Buffer.from(canonicalTradePayload(trade)),key,Buffer.from(trade.signature,"base64"));
-    if(key.asymmetricKeyType==="ec" && key.asymmetricKeyDetails?.namedCurve==="prime256v1")return crypto.verify("sha256",Buffer.from(canonicalTradePayload(trade)),{key,dsaEncoding:"ieee-p1363"},Buffer.from(trade.signature,"base64"));
-    return false;
-  } catch { return false; }
+  try { return crypto.verify("RSA-SHA256", Buffer.from(canonicalTradePayload(trade)), publicKey, Buffer.from(trade.signature, "base64")); } catch { return false; }
 }
 
 export function sha256(value: string): string { return crypto.createHash("sha256").update(value).digest("hex"); }
