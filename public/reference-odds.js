@@ -1,10 +1,14 @@
 // Teammate's market selections, preserved separately from actual stake/payout accounting.
 const references=[
-  {title:"Virginia Tech vs Maryland",slug:"cfb-vtech-mary-2026-09-19"},
+  {title:"Next Virginia Tech game",auto:"vt0"},
+  {title:"Following Virginia Tech game",auto:"vt1"},
   {title:"Virginia abortion protection amendment",slug:"will-the-virginia-abortion-protection-amendment-pass"},
   {title:"Virginia congressional map",slug:"new-virginia-congressional-map-used-in-the-midterms"},
   {title:"Bitcoin above $80,000 on September 25",slug:"bitcoin-above-80k-on-september-25-2026"},
-  {title:"Ethereum above $3,000 on September 25",slug:"ethereum-above-3000-on-september-25-2026"}
+  {title:"Ethereum above $3,000 on September 25",slug:"ethereum-above-3000-on-september-25-2026"},
+  {title:"Next Claude Opus release on September 21",slug:"will-the-next-claude-opus-model-be-released-on-september-21-2026"},
+  {title:"Next Claude Opus release on September 22",slug:"will-the-next-claude-opus-model-be-released-on-september-22-2026"},
+  {title:"Next Claude Opus release on September 23",slug:"will-the-next-claude-opus-model-be-released-on-september-23-2026"}
 ];
 const root=document.getElementById("reference-odds");root.replaceChildren();
 for(const r of references){
@@ -17,7 +21,7 @@ async function refresh(){
   if(loading||document.hidden)return;loading=true;
   await Promise.all(references.map(async r=>{
     try{
-      const response=await fetch("/api/odds/"+encodeURIComponent(r.slug),{signal:AbortSignal.timeout(8000)});
+      const response=await fetch(r.auto?"/api/odds/auto/"+r.auto:"/api/odds/"+encodeURIComponent(r.slug),{signal:AbortSignal.timeout(10000)});
       if(!response.ok)throw new Error("Unavailable");const d=await response.json();
       r.titleNode.textContent=d.question||r.title;
       r.valueNode.textContent=(d.closed?"Closed · ":"")+d.outcomes.map(o=>`${o.name}: ${(o.price*100).toFixed(1)}%`).join(" · ");
