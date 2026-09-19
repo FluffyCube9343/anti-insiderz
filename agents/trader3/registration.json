@@ -1,0 +1,59 @@
+{
+  "status": "PENDING_VALIDATION",
+  "ansName": "ans://v1.0.0.trader3.not-an-insider-just-lucky.biz",
+  "challenges": [
+    {
+      "type": "DNS_01",
+      "token": "COlmoh5Jkj4GY-vLFxGJ0smxyr4Pay5BLB7wNQMnch4",
+      "dnsRecord": {
+        "name": "_acme-challenge.trader3.not-an-insider-just-lucky.biz",
+        "type": "TXT",
+        "value": "COlmoh5Jkj4GY-vLFxGJ0smxyr4Pay5BLB7wNQMnch4"
+      },
+      "expiresAt": "2026-09-22T14:58:02.84543234Z"
+    },
+    {
+      "type": "HTTP_01",
+      "token": "cnYzMmg0OHFoY2YydGU0b2E1Y2U3ODB2bHQ",
+      "keyAuthorization": "cnYzMmg0OHFoY2YydGU0b2E1Y2U3ODB2bHQ.bQkXdLNf6_z0C-6GZ-knMbS8r4NudOhPqV9x2VpUUP8",
+      "httpPath": "/.well-known/acme-challenge/cnYzMmg0OHFoY2YydGU0b2E1Y2U3ODB2bHQ",
+      "expiresAt": "2026-09-22T14:58:02.84543234Z"
+    }
+  ],
+  "dnsRecords": [
+    {
+      "name": "_acme-challenge.trader3.not-an-insider-just-lucky.biz",
+      "type": "TXT",
+      "value": "COlmoh5Jkj4GY-vLFxGJ0smxyr4Pay5BLB7wNQMnch4",
+      "ttl": 3600,
+      "required": true
+    }
+  ],
+  "expiresAt": "2026-09-22T14:58:02.84543234Z",
+  "links": [
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/9a71ee03-316c-4c3c-86e1-7e8f68cdffa3",
+      "rel": "self"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/9a71ee03-316c-4c3c-86e1-7e8f68cdffa3/certificates/server",
+      "rel": "server-certificates"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/9a71ee03-316c-4c3c-86e1-7e8f68cdffa3/certificates/identity",
+      "rel": "identity-certificates"
+    }
+  ],
+  "nextSteps": [
+    {
+      "action": "CONFIGURE_DNS",
+      "description": "Configure DNS TXT record for ACME validation",
+      "endpoint": "https://api.ote-godaddy.com/v1/agents/9a71ee03-316c-4c3c-86e1-7e8f68cdffa3/verify-acme"
+    },
+    {
+      "action": "CONFIGURE_HTTP",
+      "description": "Configure web server file for ACME validation",
+      "endpoint": "https://api.ote-godaddy.com/v1/agents/9a71ee03-316c-4c3c-86e1-7e8f68cdffa3/verify-acme"
+    }
+  ]
+}

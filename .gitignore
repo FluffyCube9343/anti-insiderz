@@ -3,6 +3,6 @@ node_modules
 .env.local
 .env
 coverage
-certs/*.key
+*.key
 
 *.zip

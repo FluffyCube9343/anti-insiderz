@@ -1,0 +1,12 @@
+{
+  "status": "ACTIVE",
+  "phase": "COMPLETED",
+  "createdAt": "2026-09-19T14:58:20.741775Z",
+  "updatedAt": "2026-09-19T14:58:40.346493666Z",
+  "expiresAt": "0001-01-01T00:00:00Z",
+  "completedSteps": [
+    "DOMAIN_VALIDATION",
+    "CERTIFICATE_ISSUANCE",
+    "DNS_PROVISIONING"
+  ]
+}

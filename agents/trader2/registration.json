@@ -1,0 +1,59 @@
+{
+  "status": "PENDING_VALIDATION",
+  "ansName": "ans://v1.0.0.trader2.not-an-insider-just-lucky.biz",
+  "challenges": [
+    {
+      "type": "DNS_01",
+      "token": "6tbZdZ_7ZNdzNQ3uYqm5NfyaS_f2x8WMo3b2SCzzwus",
+      "dnsRecord": {
+        "name": "_acme-challenge.trader2.not-an-insider-just-lucky.biz",
+        "type": "TXT",
+        "value": "6tbZdZ_7ZNdzNQ3uYqm5NfyaS_f2x8WMo3b2SCzzwus"
+      },
+      "expiresAt": "2026-09-22T14:57:19.537066403Z"
+    },
+    {
+      "type": "HTTP_01",
+      "token": "ZHFmOW1ma2RkY3VkcDAxOXZlczQ4MmQ0NW8",
+      "keyAuthorization": "ZHFmOW1ma2RkY3VkcDAxOXZlczQ4MmQ0NW8.bQkXdLNf6_z0C-6GZ-knMbS8r4NudOhPqV9x2VpUUP8",
+      "httpPath": "/.well-known/acme-challenge/ZHFmOW1ma2RkY3VkcDAxOXZlczQ4MmQ0NW8",
+      "expiresAt": "2026-09-22T14:57:19.537066403Z"
+    }
+  ],
+  "dnsRecords": [
+    {
+      "name": "_acme-challenge.trader2.not-an-insider-just-lucky.biz",
+      "type": "TXT",
+      "value": "6tbZdZ_7ZNdzNQ3uYqm5NfyaS_f2x8WMo3b2SCzzwus",
+      "ttl": 3600,
+      "required": true
+    }
+  ],
+  "expiresAt": "2026-09-22T14:57:19.537066403Z",
+  "links": [
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/80dd1770-b27e-4f74-9c77-ee768120ad2b",
+      "rel": "self"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/80dd1770-b27e-4f74-9c77-ee768120ad2b/certificates/server",
+      "rel": "server-certificates"
+    },
+    {
+      "href": "https://api.ote-godaddy.com/v1/agents/80dd1770-b27e-4f74-9c77-ee768120ad2b/certificates/identity",
+      "rel": "identity-certificates"
+    }
+  ],
+  "nextSteps": [
+    {
+      "action": "CONFIGURE_DNS",
+      "description": "Configure DNS TXT record for ACME validation",
+      "endpoint": "https://api.ote-godaddy.com/v1/agents/80dd1770-b27e-4f74-9c77-ee768120ad2b/verify-acme"
+    },
+    {
+      "action": "CONFIGURE_HTTP",
+      "description": "Configure web server file for ACME validation",
+      "endpoint": "https://api.ote-godaddy.com/v1/agents/80dd1770-b27e-4f74-9c77-ee768120ad2b/verify-acme"
+    }
+  ]
+}
