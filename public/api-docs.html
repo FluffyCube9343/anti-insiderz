@@ -1,1 +1,1007 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API · Not An Insider</title><link rel="stylesheet" href="styles.css"><style>.docs{max-width:760px;padding-top:45px}.endpoint{border-top:1px solid var(--line);padding:20px 0}.endpoint code{color:var(--accent);font-weight:800}</style></head><body><div class="shell"><header class="top"><a class="brand" href="index.html"><span class="brand-mark">◆</span>not an insider</a><nav class="nav"><a href="markets.html">Markets</a><a href="profile.html">Profile</a><a class="active" href="api-docs.html">API</a><button class="theme" onclick="toggleTheme()">◐</button></nav></header><main class="docs"><span class="eyebrow">Integration roadmap</span><h1 class="display" style="font-size:55px;margin:8px 0 20px">API documentation.</h1><p class="muted">Placeholder only. The prototype exposes no API and holds no user data.</p><section class="endpoint"><b>Market snapshots</b><p><code>GET /v1/markets</code><br>Delayed public-market data with source and observed timestamp.</p></section><section class="endpoint"><b>Identity status</b><p><code>POST /v1/identity/check</code><br>Consent-backed ANS and provider status only; no general-web identity claims.</p></section><section class="endpoint"><b>Trade clearance</b><p><code>POST /v1/trades/clear</code><br>Identity, market validity, affiliation restriction, and audit decision.</p></section><section class="endpoint"><b>Email 2FA</b><p><code>POST /v1/auth/email-code</code><br>Rate limited, expiring, hashed verification codes.</p></section></main></div><script>function toggleTheme(){let n=document.documentElement;n.dataset.theme=n.dataset.theme==='dark'?'light':'dark';localStorage.theme=n.dataset.theme}document.documentElement.dataset.theme=localStorage.theme||'light'</script></body></html>
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>
+  API · Not An Insider
+</title>
+
+<link
+  rel="stylesheet"
+  href="styles.css"
+>
+
+
+<style>
+
+.docs {
+  display:grid;
+  grid-template-columns:220px minmax(0,1fr);
+  gap:45px;
+  margin-top:45px;
+}
+
+.docs-nav {
+  position:sticky;
+  top:25px;
+  align-self:start;
+}
+
+.docs-nav span {
+  color:var(--muted);
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.1em;
+  margin:20px 0 7px;
+  text-transform:uppercase;
+}
+
+.docs-nav a {
+  color:var(--muted);
+  display:block;
+  font-size:12px;
+  padding:5px 0;
+}
+
+.docs-nav a:hover {
+  color:var(--accent);
+}
+
+.docs-content {
+  max-width:800px;
+}
+
+.docs-content > section {
+  border-bottom:1px solid var(--line);
+  padding:0 0 45px;
+  margin-bottom:45px;
+}
+
+.docs-content h1 {
+  font-size:58px;
+  margin:8px 0 18px;
+}
+
+.docs-content h2 {
+  font-family:var(--display);
+  font-size:35px;
+  font-weight:400;
+  letter-spacing:-.04em;
+  margin:0 0 12px;
+}
+
+.docs-content h3 {
+  font-size:15px;
+  margin:28px 0 8px;
+}
+
+.endpoint {
+  background:var(--panel);
+  border:1px solid var(--line);
+  margin:16px 0;
+  padding:18px;
+}
+
+.endpoint-head {
+  align-items:center;
+  display:flex;
+  gap:10px;
+}
+
+.method {
+  background:var(--soft);
+  color:var(--accent);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  padding:5px 7px;
+}
+
+.endpoint code {
+  font-size:13px;
+  font-weight:700;
+}
+
+.code {
+  background:var(--soft);
+  border:1px solid var(--line);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;
+  line-height:1.7;
+  margin-top:13px;
+  overflow:auto;
+  padding:16px;
+  white-space:pre;
+}
+
+.flow {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:20px;
+}
+
+.flow-item {
+  background:var(--soft);
+  border:1px solid var(--line);
+  padding:15px;
+}
+
+.flow-item strong {
+  color:var(--accent);
+  display:block;
+  font-size:12px;
+}
+
+.flow-item span {
+  color:var(--muted);
+  font-size:11px;
+}
+
+.status {
+  border-left:3px solid var(--accent);
+  background:var(--soft);
+  padding:14px;
+  margin:15px 0;
+}
+
+.warning {
+  border-left-color:var(--warning);
+}
+
+table {
+  border-collapse:collapse;
+  font-size:12px;
+  margin-top:15px;
+  width:100%;
+}
+
+th,
+td {
+  border-bottom:1px solid var(--line);
+  padding:10px;
+  text-align:left;
+}
+
+th {
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+@media(max-width:760px) {
+
+  .docs {
+    grid-template-columns:1fr;
+  }
+
+  .docs-nav {
+    display:none;
+  }
+
+  .flow {
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="shell">
+
+
+<header class="top">
+
+  <a
+    class="brand"
+    href="index.html"
+  >
+    <span class="brand-mark">◆</span>
+    not an insider
+  </a>
+
+
+  <nav class="nav">
+
+    <a href="markets.html">
+      Markets
+    </a>
+
+    <a href="profile.html">
+      Profile
+    </a>
+
+    <a
+      class="active"
+      href="api-docs.html"
+    >
+      API
+    </a>
+
+    <button
+      class="theme"
+      onclick="toggleTheme()"
+    >
+      ◐
+    </button>
+
+  </nav>
+
+</header>
+
+
+
+<main class="docs">
+
+
+<!-- SIDEBAR -->
+
+<aside class="docs-nav">
+
+  <span>Overview</span>
+
+  <a href="#introduction">
+    Introduction
+  </a>
+
+  <a href="#pipeline">
+    Trade pipeline
+  </a>
+
+  <a href="#decisions">
+    Decisions
+  </a>
+
+
+  <span>Resources</span>
+
+  <a href="#markets">
+    Markets
+  </a>
+
+  <a href="#agents">
+    Agents
+  </a>
+
+  <a href="#trades">
+    Trades
+  </a>
+
+  <a href="#audit">
+    Audit log
+  </a>
+
+  <a href="#balances">
+    Balances
+  </a>
+
+  <a href="#events">
+    Material events
+  </a>
+
+
+  <span>Security</span>
+
+  <a href="#signatures">
+    Signatures
+  </a>
+
+  <a href="#nonces">
+    Replay protection
+  </a>
+
+  <a href="#errors">
+    Errors
+  </a>
+
+</aside>
+
+
+
+<!-- CONTENT -->
+
+<div class="docs-content">
+
+
+<section id="introduction">
+
+  <span class="eyebrow">
+    Developer API
+  </span>
+
+  <h1 class="display">
+    Build against the market.
+  </h1>
+
+  <p class="muted">
+    The Not An Insider API exposes markets, identity status,
+    trade execution, balances and the tamper-evident enforcement
+    audit trail.
+  </p>
+
+
+  <div class="status">
+
+    <strong>
+      API principle
+    </strong>
+
+    <div class="muted">
+      Authorization is evaluated for every trade. A valid account
+      session does not by itself authorize a market transaction.
+    </div>
+
+  </div>
+
+
+  <h3>
+    Base URL
+  </h3>
+
+  <div class="code">https://not-an-insider-just-lucky.biz/api/v1</div>
+
+
+  <h3>
+    Market agent
+  </h3>
+
+  <div class="code">ans://v1.0.0.not-an-insider-just-lucky.biz</div>
+
+</section>
+
+
+
+<!-- PIPELINE -->
+
+<section id="pipeline">
+
+  <span class="eyebrow">
+    Execution
+  </span>
+
+  <h2>
+    Every trade passes six gates.
+  </h2>
+
+  <p class="muted">
+    The trade endpoint fails closed. Funds move only after all
+    mandatory enforcement checks succeed.
+  </p>
+
+
+  <div class="flow">
+
+    <div class="flow-item">
+      <strong>01 · Signature</strong>
+      <span>Verify the signed canonical trade payload.</span>
+    </div>
+
+    <div class="flow-item">
+      <strong>02 · Nonce</strong>
+      <span>Reject replayed transaction nonces.</span>
+    </div>
+
+    <div class="flow-item">
+      <strong>03 · ANS</strong>
+      <span>Validate live agent status and identity.</span>
+    </div>
+
+    <div class="flow-item">
+      <strong>04 · Solvency</strong>
+      <span>Confirm sufficient available funds.</span>
+    </div>
+
+    <div class="flow-item">
+      <strong>05 · Affiliation</strong>
+      <span>Compare affiliations against market restrictions.</span>
+    </div>
+
+    <div class="flow-item">
+      <strong>06 · Timing</strong>
+      <span>Flag trades near declared material events.</span>
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- DECISIONS -->
+
+<section id="decisions">
+
+  <span class="eyebrow">
+    Enforcement
+  </span>
+
+  <h2>
+    Decision states
+  </h2>
+
+
+  <table>
+
+    <thead>
+
+      <tr>
+        <th>Decision</th>
+        <th>Meaning</th>
+        <th>Money moves</th>
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr>
+        <td><strong>ALLOWED</strong></td>
+        <td>All enforcement gates passed.</td>
+        <td>Yes</td>
+      </tr>
+
+      <tr>
+        <td><strong>FLAGGED</strong></td>
+        <td>Trade passed but triggered a timing flag.</td>
+        <td>Yes</td>
+      </tr>
+
+      <tr>
+        <td><strong>BLOCKED</strong></td>
+        <td>One or more mandatory gates failed.</td>
+        <td>No</td>
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</section>
+
+
+
+<!-- MARKETS -->
+
+<section id="markets">
+
+  <span class="eyebrow">
+    Markets
+  </span>
+
+  <h2>
+    Market endpoints
+  </h2>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/markets</code>
+    </div>
+
+    <p class="muted">
+      Returns active prediction markets and their current state.
+    </p>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/markets/:marketId</code>
+    </div>
+
+    <p class="muted">
+      Returns one market, including outcome pricing,
+      restricted affiliations and material-event metadata.
+    </p>
+
+    <div class="code">{
+  "id": "vt-next-game",
+  "subject": "Next Virginia Tech game",
+  "outcomes": ["YES", "NO"],
+  "yesPrice": 0.57,
+  "restrictedAffiliations": [
+    "vt-athletics"
+  ],
+  "materialEvent": null,
+  "status": "OPEN"
+}</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- AGENTS -->
+
+<section id="agents">
+
+  <span class="eyebrow">
+    Identity
+  </span>
+
+  <h2>
+    Agent endpoints
+  </h2>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/agents/:agentId</code>
+    </div>
+
+    <p class="muted">
+      Returns the market-visible identity and declared
+      affiliations associated with an agent.
+    </p>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/agents/:agentId/status</code>
+    </div>
+
+    <p class="muted">
+      Performs or reports live ANS registration validation.
+    </p>
+
+    <div class="code">{
+  "agentId": "trader3",
+  "ansStatus": "ACTIVE",
+  "expired": false,
+  "publicKeyMatch": true
+}</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- TRADES -->
+
+<section id="trades">
+
+  <span class="eyebrow">
+    Transactions
+  </span>
+
+  <h2>
+    Trade endpoints
+  </h2>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">POST</span>
+      <code>/trades/preview</code>
+    </div>
+
+    <p class="muted">
+      Calculates the expected position before execution.
+      No funds move.
+    </p>
+
+    <div class="code">{
+  "marketId": "vt-next-game",
+  "outcome": "YES",
+  "amount": 25.00
+}</div>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">POST</span>
+      <code>/trades</code>
+    </div>
+
+    <p class="muted">
+      Executes a signed trade through the complete enforcement
+      pipeline.
+    </p>
+
+    <div class="code">{
+  "tradeId": "trade_8f31",
+  "agentId": "trader3",
+  "marketId": "vt-next-game",
+  "outcome": "YES",
+  "amount": 25.00,
+  "nonce": "n_942f7",
+  "timestamp": "2026-09-19T20:35:12Z",
+  "signature": "..."
+}</div>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/trades/:tradeId</code>
+    </div>
+
+    <p class="muted">
+      Returns the current state of a transaction.
+    </p>
+
+    <div class="code">{
+  "tradeId": "trade_8f31",
+  "decision": "ALLOWED",
+  "marketId": "vt-next-game",
+  "outcome": "YES",
+  "amount": 25.00,
+  "status": "OPEN"
+}</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- AUDIT -->
+
+<section id="audit">
+
+  <span class="eyebrow">
+    Accountability
+  </span>
+
+  <h2>
+    Audit endpoints
+  </h2>
+
+  <p class="muted">
+    Enforcement decisions are appended to a hash-chained
+    audit history.
+  </p>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/audit</code>
+    </div>
+
+    <p class="muted">
+      Returns enforcement decisions in chain order.
+    </p>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/audit/:tradeId</code>
+    </div>
+
+    <p class="muted">
+      Returns the audit record associated with a trade.
+    </p>
+
+
+    <div class="code">{
+  "tradeId": "trade_8f31",
+  "decision": "ALLOWED",
+  "reasons": [
+    "SIGNATURE_VALID",
+    "NONCE_VALID",
+    "ANS_ACTIVE",
+    "SOLVENT",
+    "NO_RESTRICTED_AFFILIATION"
+  ],
+  "flagged": false,
+  "timestamp": "2026-09-19T20:35:12Z",
+  "previousHash": "3fa8...",
+  "hash": "71bd..."
+}</div>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/audit/verify</code>
+    </div>
+
+    <p class="muted">
+      Recomputes the audit chain and reports whether its
+      historical records remain internally consistent.
+    </p>
+
+    <div class="code">{
+  "valid": true,
+  "entries": 1842,
+  "brokenAt": null
+}</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- BALANCES -->
+
+<section id="balances">
+
+  <span class="eyebrow">
+    Money
+  </span>
+
+  <h2>
+    Balance endpoints
+  </h2>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/balances/:agentId</code>
+    </div>
+
+    <p class="muted">
+      Returns the available sandbox account balance used by
+      the solvency gate.
+    </p>
+
+    <div class="code">{
+  "agentId": "trader3",
+  "available": 500.00,
+  "currency": "USD"
+}</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- MATERIAL EVENTS -->
+
+<section id="events">
+
+  <span class="eyebrow">
+    Timing
+  </span>
+
+  <h2>
+    Material events
+  </h2>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">GET</span>
+      <code>/markets/:marketId/material-event</code>
+    </div>
+
+    <p class="muted">
+      Returns the declared material-event timestamp and
+      applicable timing window.
+    </p>
+
+  </div>
+
+
+  <div class="endpoint">
+
+    <div class="endpoint-head">
+      <span class="method">POST</span>
+      <code>/markets/:marketId/material-event</code>
+    </div>
+
+    <p class="muted">
+      Administrative endpoint for timestamping a known
+      material event.
+    </p>
+
+    <div class="status warning">
+      Administrative authorization is required. This endpoint
+      cannot bypass identity, signature, nonce, balance or
+      affiliation enforcement.
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- SIGNATURES -->
+
+<section id="signatures">
+
+  <span class="eyebrow">
+    Cryptography
+  </span>
+
+  <h2>
+    Trade signatures
+  </h2>
+
+  <p class="muted">
+    Clients sign the canonical trade payload before submission.
+    Private signing keys remain client-side.
+  </p>
+
+
+  <h3>
+    Canonical field order
+  </h3>
+
+  <div class="code">tradeId
+agentId
+marketId
+outcome
+amount
+nonce
+timestamp</div>
+
+
+  <h3>
+    Algorithm
+  </h3>
+
+  <div class="code">RSA-SHA256</div>
+
+</section>
+
+
+
+<!-- NONCES -->
+
+<section id="nonces">
+
+  <span class="eyebrow">
+    Replay protection
+  </span>
+
+  <h2>
+    Every trade requires a unique nonce.
+  </h2>
+
+  <p class="muted">
+    A nonce may be consumed once. Reusing a previously accepted
+    nonce causes the transaction to fail before funds move.
+  </p>
+
+
+  <div class="code">{
+  "decision": "BLOCKED",
+  "code": "NONCE_REPLAY",
+  "tradeId": "trade_8f31"
+}</div>
+
+</section>
+
+
+
+<!-- ERRORS -->
+
+<section id="errors">
+
+  <span class="eyebrow">
+    Responses
+  </span>
+
+  <h2>
+    Enforcement errors
+  </h2>
+
+
+  <table>
+
+    <thead>
+
+      <tr>
+        <th>Code</th>
+        <th>Meaning</th>
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr>
+        <td>SIGNATURE_INVALID</td>
+        <td>Trade signature could not be verified.</td>
+      </tr>
+
+      <tr>
+        <td>NONCE_REPLAY</td>
+        <td>The supplied nonce has already been consumed.</td>
+      </tr>
+
+      <tr>
+        <td>ANS_INACTIVE</td>
+        <td>The trader's ANS registration is not active.</td>
+      </tr>
+
+      <tr>
+        <td>PUBLIC_KEY_MISMATCH</td>
+        <td>Registry key does not match the expected identity key.</td>
+      </tr>
+
+      <tr>
+        <td>INSUFFICIENT_FUNDS</td>
+        <td>The account cannot fund the requested trade.</td>
+      </tr>
+
+      <tr>
+        <td>AFFILIATION_RESTRICTED</td>
+        <td>The trader has an affiliation restricted by this market.</td>
+      </tr>
+
+      <tr>
+        <td>MATERIAL_EVENT_FLAG</td>
+        <td>The trade occurred within a declared timing window.</td>
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</section>
+
+
+
+</div>
+
+</main>
+
+
+
+<footer class="footer">
+
+  Not An Insider · Developer API
+
+</footer>
+
+
+</div>
+
+
+
+<script>
