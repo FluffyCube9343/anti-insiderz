@@ -17,6 +17,8 @@ Open [the market board](http://localhost:3000/markets.html). Next.js serves the 
 
 The board now reads Supabase markets and agents, signs and submits trades, displays persisted audit decisions and payment states, and provides operator controls for event timing and resolution. Missing configuration appears on the page; it does not fall back to fake successful trades. The collapsed **market proposal** section remains a clearly labeled, unconnected UI prototype.
 
+Your teammate's live Polymarket feed is preserved in **External reference odds**. It is read-only context, distinct from local market pools and payout accounting. Unavailable external prices are labeled unavailable, not replaced by static demo odds. The former demo email code/session redirect is replaced by the local signing-key flow, eliminating the login loop without pretending to provide email authentication.
+
 ## One-time Supabase setup
 
 For a new database, run these files **in order**, using Supabase's SQL editor:
