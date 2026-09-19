@@ -25,8 +25,11 @@ export async function POST(request:Request) {
     const db=database();
     // The database locks this identity and prevents wallet replacement once any
     // payment intent exists. Placeholder wallets can be corrected before trading.
-    const {error}=await db.from("agent_identities").upsert({agent_id:identity.agentId,registry_id:b.registryId,display_name:identity.displayName,public_key:publicKey,wallet_id:b.walletId,affiliations:b.affiliations,registered_at:identity.registeredAt});
-    if(error?.message.includes("Wallet binding"))return NextResponse.json({error:"Wallet binding cannot change after a payment intent exists."},{status:409});
-    if(error)throw error;return NextResponse.json({agentId:identity.agentId,balance});
+    await db.query(`insert into public.agent_identities(agent_id,registry_id,display_name,public_key,wallet_id,affiliations,registered_at)
+      values ($1,$2,$3,$4,$5,$6,$7) on conflict(agent_id) do update set
+      registry_id=excluded.registry_id,display_name=excluded.display_name,public_key=excluded.public_key,
+      wallet_id=excluded.wallet_id,affiliations=excluded.affiliations,registered_at=excluded.registered_at`,
+      [identity.agentId,b.registryId,identity.displayName,publicKey,b.walletId,b.affiliations,identity.registeredAt]);
+    return NextResponse.json({agentId:identity.agentId,balance});
   }catch(e){return unavailable(e);}
 }

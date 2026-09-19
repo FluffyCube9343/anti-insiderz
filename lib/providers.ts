@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { createPublicKey, X509Certificate } from "node:crypto";
 import { ansConfig, nessieConfig } from "./config";
 import type { AgentIdentity, AnsRegistry, DecisionKind, Market, PaymentJob, PaymentRail, PaymentState, TradeDecision, TradeRequest, TradeStore, Transfer } from "./domain";
@@ -6,38 +5,35 @@ import type { AgentIdentity, AnsRegistry, DecisionKind, Market, PaymentJob, Paym
 export function agentFromRow(d: any): AgentIdentity {
   let publicKey=d.public_key;
   try {publicKey=normalizedKey(publicKey);}catch{ /* Setup screen will report an unusable stored key. */ }
-  return { agentId:d.agent_id, registryId:d.registry_id, displayName:d.display_name || d.agent_id, walletId:d.wallet_id, affiliations:d.affiliations, publicKey, registeredAt:d.registered_at };
+  return { agentId:d.agent_id, registryId:d.registry_id, displayName:d.display_name || d.agent_id, walletId:d.wallet_id, affiliations:d.affiliations, publicKey, registeredAt:d.registered_at instanceof Date?d.registered_at.toISOString():d.registered_at };
 }
 export function marketFromRow(d: any): Market {
-  return { marketId:d.market_id, subject:d.subject, restrictedAffiliations:d.restricted_affiliations, pool:{outcomeA:Number(d.outcome_a_total),outcomeB:Number(d.outcome_b_total)},status:d.status, materialEventAt:d.material_event_at, winningOutcome:d.winning_outcome };
+  return { marketId:d.market_id, subject:d.subject, restrictedAffiliations:d.restricted_affiliations, pool:{outcomeA:Number(d.outcome_a_total),outcomeB:Number(d.outcome_b_total)},status:d.status, materialEventAt:d.material_event_at instanceof Date?d.material_event_at.toISOString():d.material_event_at, winningOutcome:d.winning_outcome };
 }
 export function decisionFromRow(d: any): TradeDecision {
-  return {tradeId:d.trade_id, decision:d.decision, reasons:d.reasons, timestamp:d.created_at, hashPrev:d.hash_prev, hash:d.hash, sequence:d.sequence};
+  return {tradeId:d.trade_id, decision:d.decision, reasons:d.reasons, timestamp:d.created_at instanceof Date?d.created_at.toISOString():d.created_at, hashPrev:d.hash_prev, hash:d.hash, sequence:Number(d.sequence)};
 }
-export class SupabaseTradeStore implements TradeStore {
-  readonly db;
-  constructor(url:string,key:string) { this.db=createClient(url,key,{auth:{persistSession:false}}); }
-  async getAgent(id:string) { const {data,error}=await this.db.from("agent_identities").select("*").eq("agent_id",id).maybeSingle(); if(error)throw error; return data ? agentFromRow(data):null; }
-  async getMarket(id:string) { const {data,error}=await this.db.from("markets").select("*").eq("market_id",id).maybeSingle(); if(error)throw error; return data ? marketFromRow(data):null; }
+export interface SqlClient {
+  query(text:string, values?:any[]):Promise<{rows:any[]}>;
+}
+export class PostgresTradeStore implements TradeStore {
+  constructor(readonly db:SqlClient) {}
+  async getAgent(id:string) {const {rows}=await this.db.query("select * from public.agent_identities where agent_id=$1",[id]);return rows[0]?agentFromRow(rows[0]):null;}
+  async getMarket(id:string) {const {rows}=await this.db.query("select * from public.markets where market_id=$1",[id]);return rows[0]?marketFromRow(rows[0]):null;}
   async reserveNonce(nonce:string,tradeId:string) {
-    const {error}=await this.db.from("trade_nonces").insert({nonce,trade_id:tradeId});
-    if(error?.code==="23505")return false;
-    if(error)throw error;
-    return true;
+    const {rows}=await this.db.query("insert into public.trade_nonces(nonce,trade_id) values ($1,$2) on conflict do nothing returning nonce",[nonce,tradeId]);
+    return rows.length===1;
   }
   async prepare(trade:TradeRequest,pool:string,reasons:string[],flag:boolean):Promise<PaymentJob> {
-    const {data,error}=await this.db.rpc("prepare_trade",{p_trade:trade,p_pool:pool,p_reasons:reasons,p_flag:flag});
-    if(error)throw error; return data as PaymentJob;
+    const {rows}=await this.db.query("select public.prepare_trade($1::jsonb,$2,$3::text[],$4) as job",[JSON.stringify(trade),pool,reasons,flag]);return rows[0].job;
   }
   async finish(id:string,state:PaymentState,transferId:string|null,reason:string):Promise<PaymentJob> {
-    const {data,error}=await this.db.rpc("finish_payment",{p_id:id,p_status:state,p_transfer_id:transferId,p_reason:reason});
-    if(error)throw error;
-    const job=data as PaymentJob & {decision?:any};
-    return {...job,decision:job.decision ? decisionFromRow(job.decision):undefined};
+    const {rows}=await this.db.query("select public.finish_payment($1::uuid,$2,$3,$4) as job",[id,state,transferId,reason]);
+    const job=rows[0].job;return {...job,decision:job.decision?decisionFromRow(job.decision):undefined};
   }
   async appendDecision(trade:TradeRequest,decision:DecisionKind,reasons:string[]) {
-    const {data,error}=await this.db.rpc("append_decision_v2",{p_trade_id:trade.tradeId,p_decision:decision,p_reasons:reasons,p_trade:trade});
-    if(error)throw error; return decisionFromRow(data);
+    const {rows}=await this.db.query("select public.append_decision_v2($1::uuid,$2,$3::text[],$4::jsonb) as decision",[trade.tradeId,decision,reasons,JSON.stringify(trade)]);
+    return decisionFromRow(rows[0].decision);
   }
 }
 

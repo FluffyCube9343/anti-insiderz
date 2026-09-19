@@ -3,12 +3,13 @@ import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { readFileSync } from "node:fs";
 import { randomUUID,createHash } from "node:crypto";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
+import { PostgresTradeStore } from "../lib/providers";
 let db:PGlite;
 const mid=randomUUID();
 beforeAll(async()=>{
   db=new PGlite({extensions:{pgcrypto}});
-  await db.exec("create role anon; create role authenticated; create role service_role; create schema extensions;");
-  for(const f of ["0001_market.sql","0002_align_demo_markets.sql","0003_integrated_trading.sql"])await db.exec(readFileSync("supabase/migrations/"+f,"utf8"));
+  await db.exec("create role untrusted;");
+  await db.exec(readFileSync("tigerdata/migrations/0001_market.sql","utf8"));
   await db.exec("insert into agent_identities(agent_id,wallet_id,public_key,registered_at) values ('ans://one','one','key',now()),('ans://two','two','key',now()),('ans://three','three','key',now());");
 },30000);
 afterAll(async()=>{await db.close();});
@@ -22,8 +23,8 @@ async function trade(m:string,agent:string,amount:number,outcome="A") {
 async function finish(id:string,status="settled"){return db.query("select finish_payment($1,$2,$3,'Confirmed by provider') as job",[id,status,"transfer-"+id]);}
 describe("Postgres integration",()=>{
   it("applies all migrations and denies anonymous mutation RPCs",async()=>{
-    const r=await db.query<{allowed:boolean}>("select has_function_privilege('anon','public.prepare_trade(jsonb,text,text[],boolean)','execute') as allowed");expect(r.rows[0].allowed).toBe(false);
-    const s=await db.query<{allowed:boolean}>("select has_function_privilege('service_role','public.finish_payment(uuid,text,text,text)','execute') as allowed");expect(s.rows[0].allowed).toBe(true);
+    const r=await db.query<{allowed:boolean}>("select has_function_privilege('untrusted','public.prepare_trade(jsonb,text,text[],boolean)','execute') as allowed");expect(r.rows[0].allowed).toBe(false);
+    const s=await db.query<{allowed:boolean}>("select has_function_privilege(current_user,'public.finish_payment(uuid,text,text,text)','execute') as allowed");expect(s.rows[0].allowed).toBe(true);
   });
   it("reserves wallets and finalizes pool + audit atomically and idempotently",async()=>{
     await market();const t=await trade(mid,"one",10);
@@ -65,8 +66,19 @@ describe("Postgres integration",()=>{
     const id=await market(randomUUID());await trade(id,"new",1);
     await expect(db.exec("update agent_identities set wallet_id='another-wallet' where agent_id='ans://new';")).rejects.toThrow(/Wallet binding/);
   });
-  it("can rerun the additive integration migration with existing positions",async()=>{
-    await db.exec(readFileSync("supabase/migrations/0003_integrated_trading.sql","utf8"));
-    const r=await db.query<{n:number}>("select count(*)::integer as n from payment_jobs");expect(r.rows[0].n).toBeGreaterThan(0);
+  it("executes the actual Postgres adapter against the Tiger schema",async()=>{
+    const store=new PostgresTradeStore(db);
+    expect((await store.getAgent('ans://three'))?.walletId).toBe('three');
+    expect(await store.getAgent("' or 1=1 --")).toBeNull();
+    const id=await market(randomUUID()),tid=randomUUID(),nonce=randomUUID();
+    expect(await store.reserveNonce(nonce,tid)).toBe(true);
+    expect(await store.reserveNonce(nonce,randomUUID())).toBe(false);
+    expect(await store.reserveNonce(randomUUID(),tid)).toBe(false);
+    const t={tradeId:tid,agentId:'ans://three',marketId:id,amount:1,outcome:'A' as const,nonce,timestamp:new Date().toISOString(),signature:'test'};
+    const job=await store.prepare(t,'pool',[],false);expect(job.state).toBe('sending');
+    const result=await store.finish(job.id,'settled','adapter-transfer','Provider confirmed');
+    expect(result.decision?.decision).toBe('allowed');
+    expect((await store.getMarket(id))?.pool.outcomeA).toBe(1);
+    const blocked=await store.appendDecision({...t,tradeId:randomUUID()},'blocked',['Test']);expect(blocked.decision).toBe('blocked');
   });
 });

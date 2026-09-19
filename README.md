@@ -1,6 +1,6 @@
 # Not An Insider (Just Lucky)
 
-A hackathon prediction market with signed trades, live GoDaddy ANS identity checks, Capital One Nessie **sandbox** payments, per-market affiliation restrictions, and a Supabase hash-chained audit trail. This is an enforcement prototype, not an insider detector or a production financial service.
+A hackathon prediction market with signed trades, live GoDaddy ANS identity checks, Capital One Nessie **sandbox** payments, per-market affiliation restrictions, and a Tiger Data PostgreSQL hash-chained audit trail. This is an enforcement prototype, not an insider detector or a production financial service.
 
 ## Run the team's current interface
 
@@ -15,20 +15,33 @@ npm run dev
 
 Open [the market board](http://localhost:3000/markets.html). Next.js serves the partner's interface from `public/` and the backend from `app/api/`. There is no separate old dashboard or second frontend server. Before starting new work in an existing clean checkout, run `git pull --ff-only` to get teammates' updates.
 
-The board now reads Supabase markets and agents, signs and submits trades, displays persisted audit decisions and payment states, and provides operator controls for event timing and resolution. Missing configuration appears on the page; it does not fall back to fake successful trades. The collapsed **market proposal** section remains a clearly labeled, unconnected UI prototype.
+The board reads Tiger Data markets and agents, signs and submits trades, displays persisted audit decisions and payment states, and provides operator controls for event timing and resolution. Missing configuration appears on the page; it does not fall back to fake successful trades. The collapsed **market proposal** section remains a clearly labeled, unconnected UI prototype.
 
 Your teammate's live Polymarket feed is preserved in **External reference odds**. It is read-only context, distinct from local market pools and payout accounting. Unavailable external prices are labeled unavailable, not replaced by static demo odds. The former demo email code/session redirect is replaced by the local signing-key flow, eliminating the login loop without pretending to provide email authentication.
 
-## One-time Supabase setup
+## One-time Tiger Data setup
 
-For a new database, run these files **in order**, using Supabase's SQL editor:
+1. Create a dedicated PostgreSQL service in the [Tiger Data console](https://console.cloud.tigerdata.com/). Review its plan and charges before creating it.
+2. Copy the PostgreSQL connection URI into `.env.local` as `TIGER_DATABASE_URL=postgresql://...`. Use the database owner account for both migration and this server-only hackathon app. Never send this credential to browsers.
+3. Run `npm run db:migrate`. This applies `tigerdata/migrations/0001_market.sql` transactionally and records its checksum. Repeating the command skips already-applied migrations; edit schema through new migrations, not by changing an applied file.
+4. **Either** import the existing team data as below **or** run `npm run db:seed` for a fresh demo. Import must happen before seeding.
+5. Run `npm run db:check`, then start/restart the app.
 
-1. `supabase/migrations/0001_market.sql`
-2. `supabase/migrations/0002_align_demo_markets.sql`
-3. `supabase/migrations/0003_integrated_trading.sql`
-4. `supabase/seed-demo-markets.sql`
+The backend uses the `pg` driver, parameterized SQL and a bounded connection pool. TLS certificate verification is always enabled, including when copied URLs specify a weaker SSL mode. If your service uses a custom certificate authority, configure Node's `NODE_EXTRA_CA_CERTS` with its trusted CA file; do not disable verification. The schema requires `pgcrypto` for audit hashing. It uses ordinary PostgreSQL tables to preserve unique nonces, foreign keys and payment transactions; this does not yet use Timescale hypertables or claim time-series performance gains.
 
-For the team's already-seeded database, apply **0003 only** if 0001/0002 are already present. It preserves markets, keys, wallets, affiliations, and previous audit rows. It separates the four committed trader registry UUIDs from their ANS URI identifiers, adds a durable payment ledger and payout functions, and limits mutation RPCs to the service role. Do not rerun 0001 on an existing database. Back up the database before schema changes.
+Mutation functions have no PUBLIC execution privilege, and app tables have row-level security. The server uses the schema owner's access; there are no Supabase-specific roles or public database credentials. A separately scoped runtime role is recommended before production deployment.
+
+### Preserve the existing Supabase data
+
+The `supabase/` folder is retained as historical migration material, **not** the active backend. Supabase credentials are needed only for this optional one-time importer; runtime never falls back to Supabase.
+
+1. Back up the source and coordinate a maintenance window: stop **all** old app instances and teammate writes. REST pagination cannot provide a consistent snapshot while people keep changing the source.
+2. Keep the existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in your local environment alongside `TIGER_DATABASE_URL`. Initialize an empty Tiger target with `db:migrate`; do not seed it yet.
+3. Run `npm run db:import-supabase -- --source-paused`. This reads the five application tables, then imports them in one target transaction. It refuses a nonempty target, preserves audit payloads/hashes/sequences and payment IDs, and maps the four legacy UUID identity rows to the committed ANS names. The original source is never modified. A missing legacy payment ledger is allowed; other source errors fail the import.
+4. Check counts, personas, pool totals, audit integrity, and a full sandbox trade/payment flow before teammates switch. Nonzero historical pools without a settled position ledger will still block payout resolution intentionally.
+5. Update each deployment's environment and restart it. Keep Supabase intact for rollback. Once Tiger receives new writes, do **not** blindly switch back to the stale source; reconcile those new records first.
+
+Do not run both databases as active writers. Do not expose credentials in import logs, commits, or chat. The importer is for this project's small hackathon dataset, not a large-scale online migration.
 
 ## Server configuration
 
@@ -36,8 +49,7 @@ Edit `.env.local`; restart the development server after changes. All values are 
 
 | Variable | What to put there |
 | --- | --- |
-| `SUPABASE_URL` | Project API URL: `https://PROJECT_REF.supabase.co`, **not** the dashboard URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side service-role key from the project's API settings |
+| `TIGER_DATABASE_URL` | Tiger Data PostgreSQL connection string, including database username/password, host, port and database name; **not** a dashboard URL |
 | `ANS_BASE_URL` | The registry environment used for these identities; defaults to GoDaddy OTE |
 | `ANS_API_KEY`, `ANS_API_SECRET` | Registry credentials; a combined `key:secret` in `ANS_API_KEY` is also supported |
 | `NESSIE_BASE_URL` | The reachable Nessie sandbox API endpoint for the event |
@@ -94,7 +106,7 @@ npm test
 npm run build
 ```
 
-Tests cover the pipeline, RSA/P-256 signing, replay, fail-closed behavior, payment reconciliation, and actual SQL functions using embedded PostgreSQL with pgcrypto. Provider doubles are confined to tests; passing tests do **not** establish that live credentials, certificates, wallet IDs, or network access work.
+Tests cover the pipeline, RSA/P-256 signing, replay, fail-closed behavior, payment reconciliation, TLS configuration, and the actual PostgreSQL adapter and Tiger schema using embedded PostgreSQL with pgcrypto. Provider doubles are confined to tests; passing tests do **not** establish that the live Tiger service, credentials, certificates, wallet IDs, or network access work.
 
 The audit exposes hashes, signed requests, reasons, and link/payload verification. Old rows lacking canonical payloads are labeled legacy. A database owner could rewrite an entire unanchored chain or delete its tail; external checkpoints are still needed for stronger tamper evidence. ANS establishes identity, not the truth of operator-entered affiliations. Admin resolution is not an oracle, and selecting a persona is not user authentication. The operator secret now authorizes provisioning, reconciliation, and payout/resolution controls as well as event timing; none bypass the trade gates.
 

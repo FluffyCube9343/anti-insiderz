@@ -27,7 +27,7 @@ async function refreshAgents() {
 }
 function renderMarkets() {
   const list=el("list");list.replaceChildren();
-  if(!markets.length)list.append(element("p","No markets yet. Run the demo-market seed in Supabase.","muted"));
+  if(!markets.length)list.append(element("p","No markets yet. Run the demo-market seed in Tiger Data.","muted"));
   for(const m of markets) {
     const card=element("button","","market card");card.type="button";card.style.cssText="width:100%;text-align:left;color:var(--ink);font:inherit";
     const intro=element("span","");intro.append(element("span",m.status.toUpperCase(),"label"),element("h2",m.subject),element("span",`Restricted affiliations: ${m.restrictedAffiliations.join(", ")||"None"}`,"muted"));

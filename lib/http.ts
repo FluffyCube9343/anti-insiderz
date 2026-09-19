@@ -7,5 +7,5 @@ export function adminAuthorized(request: Request) {
 }
 export function unavailable(error: unknown) {
   console.error("Request failed:", error instanceof Error ? error.name : "DependencyError");
-  return NextResponse.json({ error: error instanceof Error && error.message.startsWith("Missing required configuration:") ? error.message : "Service unavailable. Check configuration, migration 0003, and provider connectivity." }, { status: 503 });
+  return NextResponse.json({ error: error instanceof Error && error.message.startsWith("Missing required configuration:") ? error.message : "Service unavailable. Check Tiger Data configuration, run db:migrate, and verify provider connectivity." }, { status: 503 });
 }

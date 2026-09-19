@@ -5,17 +5,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "node scripts/database.cjs migrate",
+    "db:seed": "node scripts/database.cjs seed",
+    "db:check": "node scripts/database.cjs check",
+    "db:import-supabase": "node scripts/import-supabase.cjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1",
     "next": "^14.2.35",
+    "pg": "^8.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^20.17.30",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
     "autoprefixer": "^10.4.21",

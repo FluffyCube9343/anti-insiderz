@@ -3,9 +3,6 @@ function required(name: string): string {
   if (!value || /paste.*here/i.test(value)) throw new Error(`Missing required configuration: ${name}`);
   return value;
 }
-export function supabaseConfig() {
-  return { supabaseUrl: required("SUPABASE_URL"), supabaseServiceKey: required("SUPABASE_SERVICE_ROLE_KEY") };
-}
 export function timingWindow() {
   const n = Number(process.env.MATERIAL_EVENT_WINDOW_MINUTES ?? 60);
   if (!Number.isFinite(n) || n < 0 || n > 10080) throw new Error("Invalid material-event window.");
