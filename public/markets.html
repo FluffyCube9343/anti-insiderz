@@ -87,6 +87,7 @@
     .side{display:none}
     }
   </style>
+    <link rel="stylesheet" href="motion.css">
   </head>
   <body>
     <div class="shell">
@@ -181,7 +182,7 @@
     </button>
   </div>
   <label for="amount" class="eyebrow" style="display:block;margin-top:18px">Test amount</label>
-  <input id="amount" type="number" min="1" value="25" oninput="updateYield()">
+  <input id="amount" type="number" min="0.01" max="10000" step="0.01" value="25" oninput="updateYield()">
   <div class="payout-summary" id="yield" role="status" aria-live="polite" aria-atomic="true">
   </div>
   <details class="access-explainer" open>
@@ -217,6 +218,8 @@ const markets = [
 let active = 0;
 let side = "yes";
 let previousFocus;
+let ticketPrice = 50;
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let proposalDecided = false;
 get("proposal-form").addEventListener("submit", event => {
   event.preventDefault();
@@ -258,13 +261,15 @@ function decideProposal(decision) {
     " · No market published. Production decisions require verified evidence and an authorized reviewer.";
 }
 function renderList() {
+const focusedIndex = [...get("list").children].indexOf(document.activeElement);
 get("list").innerHTML = markets.map((m, i) => `
   <button type="button" class="market card" onclick="openTicket(${i})" style="width:100%;text-align:left;color:var(--ink);font:inherit">
-    <span><span class="label">${m.category}${m.live ? " · LIVE ODDS" : ""}</span><strong style="display:block;margin:8px 0">${m.title}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
+    <span><span class="label">${m.category}${m.live ? " · LIVE ODDS" : " · DEMO ODDS"}</span><strong style="display:block;margin:8px 0">${escapeHtml(m.title)}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
     <span><span class="label">Yes</span><span class="quote" style="display:block">${m.yes}¢</span></span>
     <span><span class="label">No</span><span class="quote" style="display:block">${100 - m.yes}¢</span></span>
     <span class="muted">Review →<small style="display:block;color:var(--warning)">◷ Evidence review pending</small></span>
   </button>`).join("");
+if (focusedIndex >= 0) get("list").children[focusedIndex]?.focus({preventScroll:true});
 }
 renderList();
 function openTicket(i) {
@@ -272,6 +277,7 @@ function openTicket(i) {
   active = i;
   side = "yes";
   const m = markets[i];
+  ticketPrice = m.yes;
   get("category").textContent = m.category + " · SIMULATED TRADE";
   get("title").textContent = m.title;
   get("yesq").textContent = m.yes + "¢";
@@ -286,6 +292,9 @@ function openTicket(i) {
   selectSide("yes");
   get("ticket").classList.add("show");
   get("overlay").classList.add("show");
+  document.body.classList.add("modal-open");
+  document.querySelector(".shell").inert = true;
+  get("ticket").scrollTop = 0;
   get("ticket").querySelector(".close").focus();
 }
 function selectSide(value) {
@@ -297,9 +306,10 @@ function selectSide(value) {
   updateYield();
 }
 function updateYield() {
-  const cents = Math.round(Number(get("amount").value) * 100);
-  const price = side === "yes" ? markets[active].yes : 100 - markets[active].yes;
-  if (!Number.isFinite(cents) || cents < price || cents > 1000000) {
+  const rawCents = Number(get("amount").value) * 100;
+  const cents = Math.round(rawCents);
+  const price = side === "yes" ? ticketPrice : 100 - ticketPrice;
+  if (!Number.isFinite(cents) || Math.abs(rawCents-cents)>1e-8 || price <= 0 || price >= 100 || cents < price || cents > 1000000) {
     get("yield").textContent = "Enter enough for one contract, up to $10,000.";
     return false;
   }
@@ -345,13 +355,17 @@ function clearTrade() {
 function closeTicket() {
   get("ticket").classList.remove("show");
   get("overlay").classList.remove("show");
-  previousFocus?.focus();
+  document.body.classList.remove("modal-open");
+  document.querySelector(".shell").inert = false;
+  renderList();
+  if(previousFocus?.isConnected) previousFocus.focus();
+  else get("list").children[active]?.focus();
 }
 document.addEventListener("keydown", event => {
   if (!get("ticket").classList.contains("show")) return;
   if (event.key === "Escape") closeTicket();
   if (event.key === "Tab") {
-    const nodes = [...get("ticket").querySelectorAll("button:not([disabled]), input, a[href]")];
+    const nodes = [...get("ticket").querySelectorAll("button:not([disabled]), input, a[href], summary")];
     const first = nodes[0], last = nodes[nodes.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
@@ -364,20 +378,25 @@ function toggleTheme() {
 }
 document.documentElement.dataset.theme = localStorage.theme || "light";
 let lastOddsPull = 0;
+let pullingOdds = false;
 async function refreshLiveOdds() {
-  for (const m of markets) {
-    if (!m.slug) continue;
+  if (pullingOdds) return;
+  pullingOdds = true;
+  await Promise.all(markets.map(async m => {
+    if (!m.slug && !m.auto) return;
+    m.live = false;
     try {
-      const r = await fetch(m.auto ? "/api/odds/auto/" + m.auto : "/api/odds/" + encodeURIComponent(m.slug));
-      if (!r.ok) continue;
+      const r = await fetch(m.auto ? "/api/odds/auto/" + m.auto : "/api/odds/" + encodeURIComponent(m.slug), {signal:AbortSignal.timeout(8000)});
+      if (!r.ok) return;
       const d = await r.json();
       const target = (m.liveOutcome || "Yes").toLowerCase();
       const o = (d.outcomes || []).find(x => String(x.name).toLowerCase() === target);
-      if (o && Number.isFinite(o.price)) { m.yes = Math.round(o.price * 100); m.live = true; if (m.auto && d.question) m.title = d.question; }
+      if (o && Number.isFinite(o.price) && Math.round(o.price*100)>0 && Math.round(o.price*100)<100) { m.yes = Math.round(o.price * 100); m.live = true; if (m.auto && typeof d.question === "string") m.title = d.question; }
     } catch (e) { /* Polymarket unreachable - static demo price stays */ }
-  }
+  }));
+  pullingOdds = false;
   lastOddsPull = Date.now();
-  renderList();
+  if (!get("ticket").classList.contains("show")) renderList();
 }
 refreshLiveOdds();
 setInterval(refreshLiveOdds, 10000);
@@ -386,7 +405,8 @@ setInterval(() => {
   if (!el) return;
   if (!lastOddsPull) { el.textContent = "Pulling live Polymarket odds..."; return; }
   const secs = Math.floor((Date.now() - lastOddsPull) / 1000);
-  el.textContent = "Live Polymarket odds pulled " + secs + "s ago · refreshes every 10s";
+  const liveCount = markets.filter(m=>m.live).length;
+  el.textContent = liveCount + "/" + markets.length + " live quotes · checked " + secs + "s ago · other prices illustrative";
 }, 1000);
 if (sessionStorage.getItem("mayaVerified") !== "yes") location.replace("login.html");
 
