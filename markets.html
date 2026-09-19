@@ -51,6 +51,23 @@
     .lock{color:var(--warning);font-size:12px;font-weight:700}
     .ticket{background:var(--panel);border:1px solid var(--accent);box-shadow:0 20px 50px #0002;display:none;left:50%;max-width:580px;padding:26px;position:fixed;top:50%;transform:translate(-50%,-50%);width:calc(100% - 35px);z-index:5}
     .ticket.show{display:block}
+    #proposal-form label, #proposal-report label {display:block;margin:14px 0 5px;font-weight:700}
+    #proposal-form input, #proposal-form textarea, #proposal-reason {width:100%;padding:12px;background:var(--page);color:var(--ink);border:1px solid var(--line);font:inherit}
+    #proposal-form button, #proposal-report button {margin:16px 8px 0 0;cursor:pointer}
+    .ticket { max-width: 690px; }
+    .payout-summary { margin: 20px 0; }
+    .payout-hero { background: var(--soft); border: 1px solid var(--accent); border-radius: 14px; padding: 24px; }
+    .payout-label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .payout-total { display: block; color: var(--accent); font: 750 clamp(36px, 8vw, 58px)/1.2 var(--sans); letter-spacing: -.04em; font-variant-numeric: tabular-nums; margin: 8px 0; }
+    .payout-profit { color: var(--accent); font-size: 18px; font-weight: 750; }
+    .payout-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+    .payout-cell { border: 1px solid var(--line); border-radius: 10px; padding: 15px; }
+    .payout-value { display: block; font-size: clamp(22px, 5vw, 30px); font-weight: 750; font-variant-numeric: tabular-nums; margin-top: 5px; }
+    .payout-risk { color: var(--warning); }
+    .payout-footnote { color: var(--muted); font-size: 12px; margin: 10px 0; }
+    .access-explainer { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 18px 0; font-size: 13px; }
+    .access-explainer summary { cursor: pointer; font-weight: 750; }
+    .access-explainer p { color: var(--muted); line-height: 1.6; }
     .ticket h2{font-size:25px;line-height:1.25;margin:8px 0 18px}
     .close{background:none;border:0;color:var(--muted);cursor:pointer;float:right;font-size:18px}
     .choices{display:grid;gap:8px;grid-template-columns:1fr 1fr}
@@ -116,7 +133,36 @@
                   </section>
                 </main>
               </div>
-              <footer class="footer">All prices and yields below are illustrative. This static prototype does not submit or settle trades.</footer>
+              <section class="card" style="padding:24px;margin-top:32px" aria-labelledby="propose-title">
+  <h2 id="propose-title">Propose a market</h2>
+  <p>Propose → AI evidence review → Team approval or denial → Publish</p>
+  <p class="muted">Local preview. AI research and authenticated reviewer access are awaiting integration.</p>
+  <form id="proposal-form">
+    <label for="proposal-question">Yes / No question</label>
+    <input id="proposal-question" required maxlength="240">
+    <label for="proposal-date">Closing date and time (local timezone)</label>
+    <input id="proposal-date" type="datetime-local" required>
+    <label for="proposal-rules">Resolution rules, cancellations and disputes</label>
+    <textarea id="proposal-rules" required maxlength="3000"></textarea>
+    <label for="proposal-source">Primary source URL</label>
+    <input id="proposal-source" type="url" required placeholder="https://...">
+    <label for="proposal-risk">Known affiliations and manipulation risks</label>
+    <textarea id="proposal-risk" required maxlength="2000"></textarea>
+    <button class="button" type="submit">Preview review summary →</button>
+  </form>
+  <section id="proposal-report" hidden aria-live="polite">
+    <h3>Research brief for the team</h3>
+    <pre id="proposal-summary" style="white-space:pre-wrap;font:inherit"></pre>
+    <p><strong>Evidence unverified.</strong> This preview packages your submission; no web research has run.</p>
+    <p>AI review will collect dated citations, conflicting evidence, resolution ambiguity, manipulation risks and affiliation restrictions, then recommend a decision to the team.</p>
+    <label for="proposal-reason">Reviewer reasoning</label>
+    <textarea id="proposal-reason" maxlength="2000"></textarea>
+    <button class="button" onclick="decideProposal('Approved')">Simulate approval</button>
+    <button class="button" onclick="decideProposal('Denied')">Simulate denial</button>
+    <p id="proposal-status" role="status"></p>
+  </section>
+</section>
+<footer class="footer">All prices and yields below are illustrative. This static prototype does not submit or settle trades.</footer>
             </div>
             <div class="overlay" id="overlay" onclick="closeTicket()">
             </div>
@@ -136,8 +182,14 @@
   </div>
   <label for="amount" class="eyebrow" style="display:block;margin-top:18px">Test amount</label>
   <input id="amount" type="number" min="1" value="25" oninput="updateYield()">
-  <div class="detail" id="yield">
+  <div class="payout-summary" id="yield" role="status" aria-live="polite" aria-atomic="true">
   </div>
+  <details class="access-explainer" open>
+    <summary>Your access score: 100 / 100 · Good standing</summary>
+    <p>Your score describes your platform standing. The planned premium-market policy will require a minimum score, shown on each eligible market. Thresholds and score deductions are still to be configured; this demo keeps Maya at 100.</p>
+    <p><strong>Affiliation checks apply at every score.</strong> Maya's government role blocks the politics and government-policy markets even at 100. An ordinary blocked review does not reduce her score or ban her account.</p>
+    <p>The score does not change contract prices, potential payouts, or the chance of winning. Final access also requires identity reconfirmation and the market-specific clearance check below.</p>
+  </details>
   <div class="detail" id="info">
   </div>
   <p class="muted">Reconfirm the demo account: maya.chen@demo.example · code 246810</p>
@@ -149,10 +201,14 @@
   </div>
   <button class="button" id="continue" onclick="clearTrade()" style="margin-top:18px">Reconfirm identity &amp; continue →</button>
 </section>
+<script src="kalshi.js" defer></script>
 <script>
 
 "use strict";
 const get = id => document.getElementById(id);
+const liveSection = document.createElement("section");
+liveSection.innerHTML = '<h2>Kalshi market data</h2><p id="kalshi-status" role="status"></p><button id="kalshi-refresh" class="button">Refresh quotes</button><div id="kalshi-list"></div><h2>Local clearance demos</h2>';
+get("list").before(liveSection);
 const markets = [
   { category: "CRYPTO", title: "Will Bitcoin reach $90,000 by month end?", yes: 51, restricted: false, info: "Demo resolution: YES if the reference BTC/USD price reaches $90,000 before the stated month ends; otherwise NO." },
   { category: "SPORTS", title: "Will Buffalo win the championship?", yes: 12, restricted: false, info: "Demo resolution: YES if Buffalo wins the named championship. A cancelled event is voided." },
@@ -163,12 +219,52 @@ const markets = [
 let active = 0;
 let side = "yes";
 let previousFocus;
+let proposalDecided = false;
+get("proposal-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const source = new URL(get("proposal-source").value);
+  if (!["https:", "http:"].includes(source.protocol)) {
+    get("proposal-source").setCustomValidity("Use an HTTP or HTTPS URL.");
+    get("proposal-source").reportValidity();
+    return;
+  }
+  if (new Date(get("proposal-date").value) <= new Date()) {
+    get("proposal-date").setCustomValidity("Choose a future closing time.");
+    get("proposal-date").reportValidity();
+    return;
+  }
+  proposalDecided = false;
+  get("proposal-summary").textContent = [
+    "Question: " + get("proposal-question").value,
+    "Closes (local time): " + get("proposal-date").value,
+    "Rules: " + get("proposal-rules").value,
+    "Submitted source (unchecked): " + source.href,
+    "Declared risks: " + get("proposal-risk").value
+  ].join("\n\n");
+  get("proposal-reason").value = "";
+  get("proposal-report").hidden = false;
+  get("proposal-status").textContent = "Awaiting evidence review and team decision. Demo controls below.";
+});
+for (const id of ["proposal-source", "proposal-date"]) {
+  get(id).addEventListener("input", () => get(id).setCustomValidity(""));
+}
+function decideProposal(decision) {
+  if (proposalDecided) return;
+  const reason = get("proposal-reason").value.trim();
+  if (!reason) {
+    get("proposal-status").textContent = "Add reviewer reasoning first.";
+    return;
+  }
+  proposalDecided = true;
+  get("proposal-status").textContent = decision + " in simulation · " + reason +
+    " · No market published. Production decisions require verified evidence and an authorized reviewer.";
+}
 get("list").innerHTML = markets.map((m, i) => `
   <button type="button" class="market card" onclick="openTicket(${i})" style="width:100%;text-align:left;color:var(--ink);font:inherit">
     <span><span class="label">${m.category}</span><strong style="display:block;margin:8px 0">${m.title}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
     <span><span class="label">Yes</span><span class="quote" style="display:block">${m.yes}¢</span></span>
     <span><span class="label">No</span><span class="quote" style="display:block">${100 - m.yes}¢</span></span>
-    <span class="muted">Review →</span>
+    <span class="muted">Review →<small style="display:block;color:var(--warning)">◷ Evidence review pending</small></span>
   </button>`).join("");
 function openTicket(i) {
   previousFocus = document.activeElement;
@@ -179,7 +275,7 @@ function openTicket(i) {
   get("title").textContent = m.title;
   get("yesq").textContent = m.yes + "¢";
   get("noq").textContent = (100 - m.yes) + "¢";
-  get("info").textContent = m.info + " Illustrative contract and price; fees excluded.";
+  get("info").textContent = m.info + " Evidence review pending: this demo market has no verified source bundle. A ✓ Verified badge will require dated supporting sources, clear resolution rules and team approval. Verification cannot guarantee an outcome or eliminate manipulation risk.";
   get("clearance").className = "clearance";
   get("clearance").textContent = "Reconfirm Maya's demo email and code to check authorization for this market.";
   get("review-email").value = "";
@@ -209,9 +305,20 @@ function updateYield() {
   const contracts = Math.floor(cents / price);
   const cost = contracts * price / 100;
   const money = n => "$" + n.toFixed(2);
-  get("yield").textContent = contracts + " " + side.toUpperCase() + " contracts · Cost " + money(cost) +
-    " · Return if correct " + money(contracts) + " · Net profit " + money(contracts - cost) +
-    " · Maximum loss " + money(cost) + " · Unspent budget " + money(cents / 100 - cost) + ". Fees excluded.";
+  get("yield").innerHTML = `
+    <div class="payout-hero">
+      <span class="payout-label">Total return if your prediction is correct</span>
+      <strong class="payout-total">${money(contracts)}</strong>
+      <span class="payout-profit">+${money(contracts - cost)} potential net profit</span>
+      <p class="payout-footnote">Return includes your original stake. Profit shown before fees.</p>
+    </div>
+    <div class="payout-grid">
+      <div class="payout-cell"><span class="payout-label">Your money in</span><strong class="payout-value">${money(cost)}</strong></div>
+      <div class="payout-cell"><span class="payout-label">Maximum loss if incorrect</span><strong class="payout-value payout-risk">${money(cost)}</strong></div>
+      <div class="payout-cell"><span class="payout-label">${side.toUpperCase()} contracts at ${price}¢</span><strong class="payout-value">${contracts.toLocaleString("en-US")}</strong></div>
+      <div class="payout-cell"><span class="payout-label">Unspent budget</span><strong class="payout-value">${money(cents / 100 - cost)}</strong></div>
+    </div>
+    <p class="payout-footnote">Simulated fixed-price estimate · Whole contracts · Fees excluded · A correct outcome is not guaranteed.</p>`;
   return true;
 }
 function clearTrade() {
