@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+
+  <title>
+    Banking — Not An Insider
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  />
+
+
+  <style>
+
+    /* =========================================================
+       PAGE
+       ========================================================= */
+
+    .banking-page {
+      padding:48px 0 20px;
+    }
+
+
+    .banking-intro {
+      border-bottom:1px solid var(--line);
+      padding-bottom:28px;
+    }
+
+
+    .banking-intro h1 {
+      font-size:54px;
+      margin:7px 0 13px;
+      max-width:700px;
+    }
+
+
+    .banking-intro p {
+      font-size:13px;
+      line-height:1.7;
+      margin:0;
+      max-width:620px;
+    }
+
+
+
+    /* =========================================================
+       LAYOUT
+       ========================================================= */
+
+    .banking-layout {
+      display:grid;
+      gap:22px;
+      grid-template-columns:minmax(0, 1.35fr) minmax(280px, .65fr);
+      margin-top:28px;
+    }
+
+
+
+    /* =========================================================
+       MAIN ACCOUNT CARD
+       ========================================================= */
+
+    .bank-card {
+      padding:27px;
+    }
+
+
+    .bank-card-header {
+      align-items:flex-start;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:25px;
+      justify-content:space-between;
+      padding-bottom:21px;
+    }
+
+
+    .bank-card-header h2 {
+      font-size:34px;
+      margin:5px 0 7px;
+    }
+
+
+    .bank-card-header p {
+      font-size:11px;
+      margin:0;
+      max-width:460px;
+    }
+
+
+
+    /* =========================================================
+       STATUS
+       ========================================================= */
+
+    .bank-status {
+      align-items:center;
+      background:var(--soft);
+      border:1px solid var(--line);
+      display:flex;
+      flex-shrink:0;
+      font-size:10px;
+      font-weight:800;
+      gap:7px;
+      letter-spacing:.06em;
+      padding:7px 10px;
+      text-transform:uppercase;
+    }
+
+
+    .bank-status-dot {
+      background:#b64545;
+      border-radius:50%;
+      height:7px;
+      width:7px;
+    }
+
+
+    .bank-status.connected .bank-status-dot {
+      background:var(--accent);
+    }
+
+
+
+    /* =========================================================
+       CONNECTION SETUP
+       ========================================================= */
+
+    .connect-panel {
+      padding:27px 0 4px;
+    }
+
+
+    .connect-panel h3 {
+      font-size:18px;
+      margin:0 0 7px;
+    }
+
+
+    .connect-panel > p {
+      font-size:11px;
+      line-height:1.6;
+      margin:0 0 25px;
+      max-width:520px;
+    }
+
+
+    .field {
+      margin-bottom:20px;
+    }
+
+
+    .field label {
+      display:block;
+    }
+
+
+    .field-label {
+      display:block;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.08em;
+      margin-bottom:4px;
+      text-transform:uppercase;
+    }
+
+
+    .field-hint {
+      color:var(--muted);
+      display:block;
+      font-size:10px;
+      line-height:1.5;
+      margin-bottom:8px;
+    }
+
+
+    .field input,
+    .field select {
+      background:var(--page);
+      border:1px solid var(--line);
+      border-radius:0;
+      color:var(--ink);
+      font-family:var(--sans);
+      font-size:13px;
+      outline:none;
+      padding:12px 13px;
+      width:100%;
+    }
+
+
+    .field input:focus,
+    .field select:focus {
+      background:var(--panel);
+      border-color:var(--accent);
+    }
+
+
+
+    /* =========================================================
+       ACCOUNT DETAILS
+       ========================================================= */
+
+    .account-panel {
+      padding-top:25px;
+    }
+
+
+    .account-identity {
+      align-items:flex-start;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:25px;
+      justify-content:space-between;
+      padding-bottom:24px;
+    }
+
+
+    .account-identity h3 {
+      font-size:18px;
+      margin:4px 0;
+    }
+
+
+    .account-number {
+      font-size:11px;
+      margin:0;
+    }
+
+
+    .account-balance {
+      text-align:right;
+    }
+
+
+    .account-balance span {
+      color:var(--muted);
+      display:block;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+
+    .account-balance strong {
+      display:block;
+      font-family:var(--display);
+      font-size:38px;
+      font-weight:400;
+      letter-spacing:-.05em;
+      margin-top:2px;
+    }
+
+
+
+    /* =========================================================
+       ACCOUNT METADATA
+       ========================================================= */
+
+    .account-grid {
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+
+    .account-row {
+      border-bottom:1px solid var(--line);
+      padding:16px 0;
+    }
+
+
+    .account-row:nth-child(odd) {
+      padding-right:20px;
+    }
+
+
+    .account-row:nth-child(even) {
+      border-left:1px solid var(--line);
+      padding-left:20px;
+    }
+
+
+    .account-row span {
+      color:var(--muted);
+      display:block;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:.07em;
+      margin-bottom:3px;
+      text-transform:uppercase;
+    }
+
+
+    .account-row b {
+      font-size:12px;
+    }
+
+
+
+    /* =========================================================
+       ACTIONS
+       ========================================================= */
+
+    .account-actions {
+      align-items:center;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      padding-top:21px;
+    }
+
+
+    .secondary-button {
+      background:transparent;
+      border:1px solid var(--line);
+      color:var(--muted);
+      cursor:pointer;
+      font-family:var(--sans);
+      font-size:12px;
+      font-weight:700;
+      padding:10px 14px;
+    }
+
+
+    .secondary-button:hover {
+      border-color:var(--ink);
+      color:var(--ink);
+    }
+
+
+    .danger-button:hover {
+      border-color:#b64545;
+      color:#b64545;
+    }
+
+
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .side-card {
+      margin-bottom:22px;
+      padding:22px;
+    }
+
+
+    .side-card h3 {
+      font-size:24px;
+      margin:5px 0 12px;
+    }
+
+
+    .side-card p {
+      font-size:11px;
+      line-height:1.65;
+      margin:0;
+    }
+
+
+
+    /* =========================================================
+       FLOW
+       ========================================================= */
+
+    .flow {
+      margin-top:18px;
+    }
+
+
+    .flow-step {
+      align-items:flex-start;
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:11px;
+      padding:13px 0;
+    }
+
+
+    .flow-number {
+      align-items:center;
+      border:1px solid var(--line);
+      display:flex;
+      flex:0 0 22px;
+      font-size:9px;
+      font-weight:800;
+      height:22px;
+      justify-content:center;
+    }
+
+
+    .flow-step b {
+      display:block;
+      font-size:10px;
+      margin-bottom:2px;
+      text-transform:uppercase;
+    }
+
+
+    .flow-step p {
+      font-size:10px;
+    }
+
+
+
+    /* =========================================================
+       BANKING ACTIVITY
+       ========================================================= */
+
+    .activity {
+      margin-top:22px;
+      padding:25px;
+    }
+
+
+    .activity-header {
+      align-items:flex-end;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:20px;
+      justify-content:space-between;
+      padding-bottom:18px;
+    }
+
+
+    .activity-header h2 {
+      font-size:32px;
+      margin:5px 0 0;
+    }
+
+
+    .activity-count {
+      color:var(--muted);
+      font-size:10px;
+      font-weight:800;
+    }
+
+
+    .activity-empty {
+      color:var(--muted);
+      font-size:11px;
+      padding:28px 0 5px;
+    }
+
+
+    .activity-entry {
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      display:grid;
+      gap:15px;
+      grid-template-columns:1fr auto;
+      padding:16px 0;
+    }
+
+
+    .activity-entry:last-child {
+      border-bottom:0;
+    }
+
+
+    .activity-title {
+      font-size:12px;
+      font-weight:800;
+    }
+
+
+    .activity-meta {
+      color:var(--muted);
+      font-size:9px;
+      margin-top:3px;
+    }
+
+
+    .activity-amount {
+      font-family:var(--display);
+      font-size:20px;
+    }
+
+
+    .positive {
+      color:var(--accent);
+    }
+
+
+    .negative {
+      color:#b64545;
+    }
+
+
+
+    /* =========================================================
+       CONNECTION RESULT
+       ========================================================= */
+
+    .connection-result {
+      color:var(--accent);
+      font-size:11px;
+      font-weight:700;
+      margin:15px 0 0;
+      min-height:16px;
+    }
+
+
+
+    /* =========================================================
+       MOBILE
+       ========================================================= */
+
+    @media(max-width:800px) {
+
+      .banking-layout {
+        grid-template-columns:1fr;
+      }
+
+
+      .banking-intro h1 {
+        font-size:44px;
+      }
+
+    }
+
+
+    @media(max-width:650px) {
+
+      .bank-card-header,
+      .account-identity,
+      .activity-header {
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+
+      .account-balance {
+        text-align:left;
+      }
+
+
+      .account-grid {
+        grid-template-columns:1fr;
+      }
+
+
+      .account-row:nth-child(odd),
+      .account-row:nth-child(even) {
+        border-left:0;
+        padding-left:0;
+        padding-right:0;
+      }
+
+
+      .account-actions {
+        align-items:stretch;
+        flex-direction:column;
+      }
+
+
+      .account-actions a,
+      .account-actions button {
+        text-align:center;
+        width:100%;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+
+<body>
+
+  <div class="shell">
+
+
+    <!-- ======================================================
+         NAVIGATION
+         ====================================================== -->
+
+    <header class="top">
+
+      <a
+        class="brand"
+        href="markets.html"
+      >
+        <span class="brand-mark">
+          ◆
+        </span>
+
+        Not An Insider
+      </a>
+
+
+      <nav class="nav">
+
+        <a href="markets.html">
+          Markets
+        </a>
+
+        <a href="profile.html">
+          Profile
+        </a>
+
+        <a
+          href="banking.html"
+          class="active"
+        >
+          Banking
+        </a>
+
+        <a href="api-docs.html">
+          API
+        </a>
+
+        <button
+          class="theme"
+          id="theme-toggle"
+          type="button"
+        >
+          Theme
+        </button>
+
+      </nav>
+
+    </header>
+
+
+
+    <main class="banking-page">
+
+
+      <!-- ====================================================
+           INTRO
+           ==================================================== -->
+
+      <section class="banking-intro">
+
+        <span class="eyebrow">
+          Private banking
+        </span>
+
+        <h1 class="display">
+          Connect your banking layer.
+        </h1>
+
+        <p class="muted">
+          Link a sandbox checking account to view available cash,
+          fund approved trades, and receive future market settlements.
+          Banking remains separate from market-access enforcement.
+        </p>
+
+      </section>
+
+
+
+      <!-- ====================================================
+           MAIN GRID
+           ==================================================== -->
+
+      <div class="banking-layout">
+
+
+        <!-- ==================================================
+             ACCOUNT
+             ================================================== -->
+
+        <section class="bank-card card">
+
+          <div class="bank-card-header">
+
+            <div>
+
+              <span class="eyebrow">
+                Capital One Nessie
+              </span>
+
+              <h2 class="display">
+                Checking account
+              </h2>
+
+              <p class="muted">
+                This sandbox account acts as the financial source
+                for available balance, approved trade funding,
+                and settlement payouts.
+              </p>
+
+            </div>
+
+
+            <div
+              class="bank-status"
+              id="bank-status"
+            >
+
+              <span class="bank-status-dot"></span>
+
+              <span id="bank-status-text">
+                Not connected
+              </span>
+
+            </div>
+
+          </div>
+
+
+
+          <!-- =================================================
+               NOT CONNECTED
+               ================================================= -->
+
+          <div
+            class="connect-panel"
+            id="connect-panel"
+          >
+
+            <h3>
+              Create a sandbox account
+            </h3>
+
+            <p class="muted">
+              For now, this creates a local simulated checking
+              account. Later, the same connection flow can create
+              or retrieve the account through the Nessie API.
+            </p>
+
+
+
+            <div class="field">
+
+              <label for="account-type">
+
+                <span class="field-label">
+                  Account type
+                </span>
+
+                <span class="field-hint">
+                  The account used to fund market activity.
+                </span>
+
+              </label>
+
+
+              <select id="account-type">
+
+                <option value="Checking">
+                  Checking
+                </option>
+
+                <option value="Savings">
+                  Savings
+                </option>
+
+              </select>
+
+            </div>
+
+
+
+            <div class="field">
+
+              <label for="starting-balance">
+
+                <span class="field-label">
+                  Starting sandbox balance
+                </span>
+
+                <span class="field-hint">
+                  Fake cash used while building the banking system.
+                </span>
+
+              </label>
+
+
+              <input
+                id="starting-balance"
+                type="number"
+                min="0"
+                step="0.01"
+                value="500"
+              />
+
+            </div>
+
+
+
+            <button
+              class="button"
+              id="connect-button"
+              type="button"
+            >
+              Connect Nessie account →
+            </button>
+
+
+            <p
+              class="connection-result"
+              id="connection-result"
+            ></p>
+
+          </div>
+
+
+
+          <!-- =================================================
+               CONNECTED
+               ================================================= -->
+
+          <div
+            class="account-panel"
+            id="account-panel"
+            hidden
+          >
+
+            <div class="account-identity">
+
+              <div>
+
+                <span class="bank-label">
+                  Linked account
+                </span>
+
+                <h3 id="account-name">
+                  Capital One Nessie Checking Account
+                </h3>
+
+                <p
+                  class="muted account-number"
+                  id="account-number"
+                >
+                  Checking •••• 0000
+                </p>
+
+              </div>
+
+
+              <div class="account-balance">
+
+                <span>
+                  Available cash
+                </span>
+
+                <strong id="account-balance">
+                  $0.00
+                </strong>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="account-grid">
+
+              <div class="account-row">
+
+                <span>
+                  Provider
+                </span>
+
+                <b id="account-provider">
+                  Capital One Nessie
+                </b>
+
+              </div>
+
+
+              <div class="account-row">
+
+                <span>
+                  Status
+                </span>
+
+                <b>
+                  Connected
+                </b>
+
+              </div>
+
+
+              <div class="account-row">
+
+                <span>
+                  Account owner
+                </span>
+
+                <b id="account-owner">
+                  —
+                </b>
+
+              </div>
+
+
+              <div class="account-row">
+
+                <span>
+                  Currency
+                </span>
+
+                <b>
+                  USD
+                </b>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="account-actions">
+
+              <button
+                class="secondary-button danger-button"
+                id="disconnect-button"
+                type="button"
+              >
+                Disconnect account
+              </button>
+
+
+              <a
+                class="button"
+                href="profile.html"
+              >
+                Return to profile →
+              </a>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             SIDEBAR
+             ================================================== -->
+
+        <aside>
+
+
+          <section class="side-card card">
+
+            <span class="eyebrow">
+              Banking flow
+            </span>
+
+            <h3 class="display">
+              What happens here?
+            </h3>
+
+            <p class="muted">
+              The banking layer supplies financial state.
+              It does not decide whether a user is permitted
+              to trade.
+            </p>
+
+
+            <div class="flow">
+
+              <div class="flow-step">
+
+                <span class="flow-number">
+                  1
+                </span>
+
+                <div>
+
+                  <b>
+                    Connect
+                  </b>
+
+                  <p class="muted">
+                    Create or retrieve the linked sandbox account.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="flow-step">
+
+                <span class="flow-number">
+                  2
+                </span>
+
+                <div>
+
+                  <b>
+                    Read balance
+                  </b>
+
+                  <p class="muted">
+                    Profile and checkout display one shared balance.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="flow-step">
+
+                <span class="flow-number">
+                  3
+                </span>
+
+                <div>
+
+                  <b>
+                    Clear trade
+                  </b>
+
+                  <p class="muted">
+                    Identity and market rules are checked before funds move.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="flow-step">
+
+                <span class="flow-number">
+                  4
+                </span>
+
+                <div>
+
+                  <b>
+                    Transfer
+                  </b>
+
+                  <p class="muted">
+                    Approved trades debit the linked balance.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="flow-step">
+
+                <span class="flow-number">
+                  5
+                </span>
+
+                <div>
+
+                  <b>
+                    Settle
+                  </b>
+
+                  <p class="muted">
+                    Winning positions eventually credit payouts back.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+
+
+          <section class="side-card card">
+
+            <span class="eyebrow">
+              Security
+            </span>
+
+            <h3 class="display">
+              Banking stays isolated.
+            </h3>
+
+            <p class="muted">
+              When the real Nessie connection is added, API credentials
+              should remain on the server. The browser should only receive
+              the account information it needs to display.
+            </p>
+
+          </section>
+
+        </aside>
+
+      </div>
+
+
+
+      <!-- ====================================================
+           BANKING ACTIVITY
+           ==================================================== -->
+
+      <section class="activity card">
+
+        <div class="activity-header">
+
+          <div>
+
+            <span class="eyebrow">
+              Banking activity
+            </span>
+
+            <h2 class="display">
+              Account ledger
+            </h2>
+
+          </div>
+
+
+          <span
+            class="activity-count"
+            id="activity-count"
+          >
+            0 transactions
+          </span>
+
+        </div>
+
+
+        <div id="activity-list">
+
+          <p class="activity-empty">
+            Connect an account to begin recording banking activity.
+          </p>
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+
+
+    <footer class="footer">
+
+      Not An Insider (Just Lucky) ·
+      Sandbox banking environment
+
+    </footer>
+
+  </div>
+
+
+
+  <script>
+
+    /*
+     * =========================================================
+     * HELPERS
+     * =========================================================
+     */
+
+    const get =
+      id => document.getElementById(id);
+
+
+    function money(value) {
+
+      return new Intl.NumberFormat(
+        "en-US",
+        {
+          style: "currency",
+          currency: "USD"
+        }
+      ).format(
+        Number(value) || 0
+      );
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * PRIVATE PAGE AUTH
+     * =========================================================
+     */
+
+    const storedUser =
+      sessionStorage.getItem("user");
+
+
+    const verified =
+      sessionStorage.getItem("verified");
+
+
+    if (
+      !storedUser ||
+      verified !== "yes"
+    ) {
+
+      location.replace(
+        "index.html"
+      );
+
+      throw new Error(
+        "Authentication required."
+      );
+
+    }
+
+
+    const user =
+      JSON.parse(storedUser);
+
+
+
+    /*
+     * =========================================================
+     * BANK ACCOUNT STORAGE
+     * =========================================================
+     */
+
+    function getBankAccount() {
+
+      const stored =
+        localStorage.getItem(
+          "bankAccount"
+        );
+
+
+      if (!stored)
+        return null;
+
+
+      try {
+
+        return JSON.parse(
+          stored
+        );
+
+      }
+
+      catch {
+
+        return null;
+
+      }
+
+    }
+
+
+
+    function saveBankAccount(account) {
+
+      localStorage.setItem(
+        "bankAccount",
+        JSON.stringify(account)
+      );
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * BANKING LEDGER
+     * =========================================================
+     */
+
+    function getBankActivity() {
+
+      const stored =
+        localStorage.getItem(
+          "bankActivity"
+        );
+
+
+      if (!stored)
+        return [];
+
+
+      try {
+
+        return JSON.parse(
+          stored
+        );
+
+      }
+
+      catch {
+
+        return [];
+
+      }
+
+    }
+
+
+
+    function saveBankActivity(entries) {
+
+      localStorage.setItem(
+        "bankActivity",
+        JSON.stringify(entries)
+      );
+
+    }
+
+
+
+    function addBankActivity(entry) {
+
+      const entries =
+        getBankActivity();
+
+
+      entries.unshift({
+
+        id:
+          crypto.randomUUID(),
+
+        timestamp:
+          new Date().toISOString(),
+
+        ...entry
+
+      });
+
+
+      saveBankActivity(entries);
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * ACCOUNT CREATION
+     * =========================================================
+     */
+
+    function connectBankAccount() {
+
+      const startingBalance =
+        Number(
+          get("starting-balance").value
+        );
+
+
+      const accountType =
+        get("account-type").value;
+
+
+      if (
+        !Number.isFinite(startingBalance) ||
+        startingBalance < 0
+      ) {
+
+        get("connection-result").textContent =
+          "Enter a valid starting balance.";
+
+        return;
+
+      }
+
+
+
+      const last4 =
+        String(
+          Math.floor(
+            1000 +
+            Math.random() * 9000
+          )
+        );
+
+
+
+      const account = {
+
+        id:
+          crypto.randomUUID(),
+
+        owner:
+          user.email,
+
+        ownerName:
+          user.name,
+
+        provider:
+          "Capital One Nessie",
+
+        name:
+          "Capital One Nessie Checking Account",
+
+        type:
+          accountType,
+
+        last4:
+          last4,
+
+        balance:
+          startingBalance,
+
+        currency:
+          "USD",
+
+        connected:
+          true,
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+
+
+      saveBankAccount(
+        account
+      );
+
+
+
+      addBankActivity({
+
+        type:
+          "ACCOUNT_OPENED",
+
+        description:
+          "Capital One Nessie Checking Account opened",
+
+        amount:
+          startingBalance,
+
+        direction:
+          "credit"
+
+      });
+
+
+
+      get("connection-result").textContent =
+        "Account connected successfully.";
+
+
+
+      renderBankAccount();
+      renderActivity();
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * DISCONNECT
+     * =========================================================
+     */
+
+    function disconnectBankAccount() {
+
+      const account =
+        getBankAccount();
+
+
+      if (!account)
+        return;
+
+
+
+      addBankActivity({
+
+        type:
+          "ACCOUNT_DISCONNECTED",
+
+        description:
+          "Bank account disconnected",
+
+        amount:
+          0,
+
+        direction:
+          "neutral"
+
+      });
+
+
+
+      localStorage.removeItem(
+        "bankAccount"
+      );
+
+
+      renderBankAccount();
+      renderActivity();
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * RENDER ACCOUNT
+     * =========================================================
+     */
+
+    function renderBankAccount() {
+
+      const account =
+        getBankAccount();
+
+
+      const status =
+        get("bank-status");
+
+
+      const statusText =
+        get("bank-status-text");
+
+
+      const connectPanel =
+        get("connect-panel");
+
+
+      const accountPanel =
+        get("account-panel");
+
+
+
+      if (!account) {
+
+        status.classList.remove(
+          "connected"
+        );
+
+
+        statusText.textContent =
+          "Not connected";
+
+
+        connectPanel.hidden =
+          false;
+
+
+        accountPanel.hidden =
+          true;
+
+
+        return;
+
+      }
+
+
+
+      status.classList.add(
+        "connected"
+      );
+
+
+      statusText.textContent =
+        "Connected";
+
+
+      connectPanel.hidden =
+        true;
+
+
+      accountPanel.hidden =
+        false;
+
+
+
+      get("account-name").textContent =
+        account.name;
+
+
+      get("account-number").textContent =
+        account.type +
+        " •••• " +
+        account.last4;
+
+
+      get("account-balance").textContent =
+        money(
+          account.balance
+        );
+
+
+      get("account-provider").textContent =
+        account.provider;
+
+
+      get("account-owner").textContent =
+        account.ownerName ||
+        account.owner;
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * RENDER ACTIVITY
+     * =========================================================
+     */
+
+    function renderActivity() {
+
+      const entries =
+        getBankActivity();
+
+
+      const list =
+        get("activity-list");
+
+
+      get("activity-count").textContent =
+        entries.length +
+        (
+          entries.length === 1
+            ? " transaction"
+            : " transactions"
+        );
+
+
+
+      if (!entries.length) {
+
+        list.innerHTML =
+          '<p class="activity-empty">' +
+          'No banking activity yet.' +
+          '</p>';
+
+        return;
+
+      }
+
+
+
+      list.innerHTML =
+        entries
+          .map(entry => {
+
+            const date =
+              new Date(
+                entry.timestamp
+              );
+
+
+            const positive =
+              entry.direction ===
+              "credit";
+
+
+            const negative =
+              entry.direction ===
+              "debit";
+
+
+            let amountClass = "";
+
+            let prefix = "";
+
+
+            if (positive) {
+
+              amountClass =
+                "positive";
+
+              prefix =
+                "+";
+
+            }
+
+
+            if (negative) {
+
+              amountClass =
+                "negative";
+
+              prefix =
+                "-";
+
+            }
+
+
+
+            return `
+              <div class="activity-entry">
+
+                <div>
+
+                  <div class="activity-title">
+                    ${entry.description}
+                  </div>
+
+                  <div class="activity-meta">
+                    ${date.toLocaleString()}
+                  </div>
+
+                </div>
+
+
+                <div
+                  class="activity-amount ${amountClass}"
+                >
+                  ${
+                    entry.amount > 0
+                      ? prefix +
+                        money(entry.amount)
+                      : "—"
+                  }
+                </div>
+
+              </div>
+            `;
+
+          })
+          .join("");
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * THEME
+     * =========================================================
+     */
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+
+    if (savedTheme) {
+
+      document.documentElement.dataset.theme =
+        savedTheme;
+
+    }
+
+
+
+    get("theme-toggle")
+      .addEventListener(
+        "click",
+        () => {
+
+          const dark =
+            document.documentElement.dataset.theme ===
+            "dark";
+
+
+          const next =
+            dark
+              ? "light"
+              : "dark";
+
+
+          document.documentElement.dataset.theme =
+            next;
+
+
+          localStorage.setItem(
+            "theme",
+            next
+          );
+
+        }
+      );
+
+
+
+    /*
+     * =========================================================
+     * EVENTS
+     * =========================================================
+     */
+
+    get("connect-button")
+      .addEventListener(
+        "click",
+        connectBankAccount
+      );
+
+
+    get("disconnect-button")
+      .addEventListener(
+        "click",
+        disconnectBankAccount
+      );
+
+
+
+    /*
+     * =========================================================
+     * INITIAL RENDER
+     * =========================================================
+     */
+
+    renderBankAccount();
+    renderActivity();
+
+  </script>
+
+</body>
+
+</html>
