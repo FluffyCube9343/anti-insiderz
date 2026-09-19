@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Access · Not An Insider</title>
+    <style>
+    :root{--ink:#13211d;--muted:#63736c;--line:#d5ddd7;--page:#f6f8f5;--panel:#fff;--soft:#eef3ee;--accent:#176b51;--accent-ink:#e9f9ed;--warning:#a85f10;--display:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
+    html[data-theme="dark"]{--ink:#eff5f0;--muted:#9ba9a1;--line:#314039;--page:#101714;--panel:#17201b;--soft:#1d2922;--accent:#7dd69c;--accent-ink:#102319;--warning:#efb35b;color-scheme:dark}
+    *{box-sizing:border-box}
+    body{background:var(--page);color:var(--ink);font:15px/1.5 var(--sans);margin:0;transition:background .2s,color .2s}
+    a{color:inherit;text-decoration:none}
+    .shell{margin:auto;max-width:1160px;padding:22px 30px}
+    .top{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding-bottom:18px}
+    .brand{color:var(--accent);font-size:16px;font-weight:800;letter-spacing:-.055em}
+    .brand-mark{display:inline-block;margin-right:7px;transform:rotate(-25deg)}
+    .nav{align-items:center;display:flex;gap:20px}
+    .nav a{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.02em}
+    .nav a:hover,.nav a.active{color:var(--accent)}
+    .theme{background:var(--soft);border:1px solid var(--line);border-radius:99px;color:var(--ink);cursor:pointer;font-size:12px;padding:6px 9px}
+    .eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .display{font-family:var(--display);font-weight:400;letter-spacing:-.055em;line-height:.98}
+    .button{background:var(--accent);border:1px solid var(--accent);color:var(--accent-ink);display:inline-block;font-size:13px;font-weight:800;padding:11px 15px}
+    .button:hover{background:transparent;color:var(--accent)}
+    .card{background:var(--panel);border:1px solid var(--line)}
+    .muted{color:var(--muted)}
+    .notice{background:var(--soft);border-left:3px solid var(--accent);padding:15px 17px}
+    .footer{border-top:1px solid var(--line);color:var(--muted);font-size:11px;margin-top:35px;padding:18px 0}
+    @media(max-width:650px){.shell{padding:18px}
+    .nav{gap:11px}
+    .nav a{font-size:11px}
+    .top{align-items:flex-start}
+    .theme{margin-top:-4px}
+    }
+  </style>
+    <style>
+    body{display:grid;min-height:100vh;place-items:center}
+    .access{max-width:470px;width:100%}
+    .access .top{margin-bottom:45px}
+    .form{padding:30px}
+    .form h1{font-size:52px;margin:8px 0}
+    .form p{margin-bottom:22px}
+    label{display:block;font-size:12px;font-weight:800;margin:15px 0 6px}
+    input,select{background:var(--page);border:1px solid var(--line);color:var(--ink);font:inherit;padding:11px;width:100%}
+    input:focus,select:focus{border-color:var(--accent);outline:none}
+    .form .button{cursor:pointer;margin-top:24px;width:100%}
+    #message{font-size:12px;min-height:20px}
+    .verify{display:none}
+    .code{font-size:24px;letter-spacing:.25em;text-align:center}
+  </style>
+  </head>
+  <body>
+    <main class="access">
+      <header class="top">
+        <a class="brand" href="index.html">
+        <span class="brand-mark">◆</span>not an insider</a>
+        <button class="theme" onclick="toggleTheme()">◐</button>
+      </header>
+      <section class="form card" id="profile">
+        <span class="eyebrow">Test onboarding</span>
+        <h1 class="display">Set up access.</h1>
+        <p class="muted">Local-only test profile. Use the prefilled synthetic Maya account. Verification status is stored in this browser tab. No email is sent.</p>
+        <form id="signup">
+          <label for="name">Name</label>
+          <input id="name" readonly required value="Maya Chen">
+          <label for="email">Email</label>
+          <input id="email" type="email" readonly required value="maya.chen@demo.example">
+          <label for="birthday">Birthday</label>
+          <input id="birthday" type="date" readonly required value="1997-08-14">
+          <label for="role">Role or relationship</label>
+          <select id="role" disabled required>
+          <option>Government employee</option>
+          <option>Employee</option>
+          <option>Executive or director</option>
+          <option>Contractor or adviser</option>
+          <option>Investor</option>
+          <option>Public official</option>
+          <option>Household member</option>
+        </select>
+        <button class="button">Continue to verification →</button>
+      </form>
+    </section>
+    <section class="form card verify" id="verification">
+      <span class="eyebrow">Email verification</span>
+      <h1 class="display">Confirm it&apos;s you.</h1>
+      <p class="muted">A code would be sent to <b>maya.chen@demo.example</b>. For this local test, enter <b>246810</b>.</p>
+      <label for="code">Six-digit code</label>
+      <input class="code" id="code" inputmode="numeric" maxlength="6" placeholder="000000">
+      <button class="button" onclick="verify()">Verify and enter markets →</button>
+      <p id="message" class="muted">
+    </p>
+  </section>
+</main>
+<script>function toggleTheme(){let n=document.documentElement;n.dataset.theme=n.dataset.theme==='dark'?'light':'dark';localStorage.theme=n.dataset.theme}document.documentElement.dataset.theme=localStorage.theme||'light';signup.onsubmit=e=>{e.preventDefault();profile.style.display='none';verification.style.display='block'};function verify(){message.textContent=code.value==='246810'?'Verified. Loading market access…':'Use the test code 246810.';if(code.value==='246810'){sessionStorage.setItem('mayaVerified','yes');setTimeout(()=>location='markets.html',500)}}</script>
+</body>
+</html>

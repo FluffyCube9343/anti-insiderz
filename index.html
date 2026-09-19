@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Not An Insider</title>
+    <style>
+    :root{--ink:#13211d;--muted:#63736c;--line:#d5ddd7;--page:#f6f8f5;--panel:#fff;--soft:#eef3ee;--accent:#176b51;--accent-ink:#e9f9ed;--warning:#a85f10;--display:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
+    html[data-theme="dark"]{--ink:#eff5f0;--muted:#9ba9a1;--line:#314039;--page:#101714;--panel:#17201b;--soft:#1d2922;--accent:#7dd69c;--accent-ink:#102319;--warning:#efb35b;color-scheme:dark}
+    *{box-sizing:border-box}
+    body{background:var(--page);color:var(--ink);font:15px/1.5 var(--sans);margin:0;transition:background .2s,color .2s}
+    a{color:inherit;text-decoration:none}
+    .shell{margin:auto;max-width:1160px;padding:22px 30px}
+    .top{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding-bottom:18px}
+    .brand{color:var(--accent);font-size:16px;font-weight:800;letter-spacing:-.055em}
+    .brand-mark{display:inline-block;margin-right:7px;transform:rotate(-25deg)}
+    .nav{align-items:center;display:flex;gap:20px}
+    .nav a{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.02em}
+    .nav a:hover,.nav a.active{color:var(--accent)}
+    .theme{background:var(--soft);border:1px solid var(--line);border-radius:99px;color:var(--ink);cursor:pointer;font-size:12px;padding:6px 9px}
+    .eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .display{font-family:var(--display);font-weight:400;letter-spacing:-.055em;line-height:.98}
+    .button{background:var(--accent);border:1px solid var(--accent);color:var(--accent-ink);display:inline-block;font-size:13px;font-weight:800;padding:11px 15px}
+    .button:hover{background:transparent;color:var(--accent)}
+    .card{background:var(--panel);border:1px solid var(--line)}
+    .muted{color:var(--muted)}
+    .notice{background:var(--soft);border-left:3px solid var(--accent);padding:15px 17px}
+    .footer{border-top:1px solid var(--line);color:var(--muted);font-size:11px;margin-top:35px;padding:18px 0}
+    @media(max-width:650px){.shell{padding:18px}
+    .nav{gap:11px}
+    .nav a{font-size:11px}
+    .top{align-items:flex-start}
+    .theme{margin-top:-4px}
+    }
+  </style>
+    <style>
+    .hero{padding:110px 0 86px}
+    .hero h1{font-size:clamp(54px,9vw,112px);margin:14px 0 24px;max-width:900px}
+    .hero h1 em{color:var(--accent);font-style:normal}
+    .hero p{font-size:18px;max-width:590px}
+    .actions{display:flex;gap:20px;align-items:center;margin-top:32px}
+    .text-link{border-bottom:1px solid var(--line);font-size:13px;font-weight:700;padding-bottom:3px}
+    .principles{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+    .principle{border-right:1px solid var(--line);padding:25px 22px}
+    .principle:first-child{padding-left:0}
+    .principle:last-child{border:0}
+    .principle h2{font-size:15px;margin:25px 0 6px}
+    .principle p{color:var(--muted);font-size:13px;margin:0}
+    @media(max-width:650px){.hero{padding:75px 0 60px}
+    .principles{grid-template-columns:1fr}
+    .principle,.principle:first-child{border-bottom:1px solid var(--line);border-right:0;padding:20px 0}
+    .principle h2{margin-top:13px}
+    }
+  </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <a class="brand" href="index.html">
+        <span class="brand-mark">◆</span>not an insider</a>
+        <nav class="nav">
+          <a href="#about">Method</a>
+          <a href="login.html">Access</a>
+          <a href="api-docs.html">API</a>
+          <button class="theme" onclick="toggleTheme()" aria-label="Toggle color theme">◐</button>
+        </nav>
+      </header>
+      <main class="hero">
+        <span class="eyebrow">Verified prediction markets</span>
+        <h1 class="display">Price discovery,<br>
+        <em>without privileged access.</em>
+      </h1>
+      <p class="muted">A market built around identity, market integrity, trade clearance, and a permanent audit trail—before a trade is allowed to settle.</p>
+      <div class="actions">
+        <a class="button" href="login.html">Create test profile →</a>
+        <a class="text-link" href="#about">See the controls</a>
+      </div>
+    </main>
+    <section class="principles" id="about">
+      <article class="principle">
+        <span class="eyebrow">01</span>
+        <h2>Identity before access</h2>
+        <p>ANS-backed identity and live status verification form the foundation.</p>
+      </article>
+      <article class="principle">
+        <span class="eyebrow">02</span>
+        <h2>Clear trades, not promises</h2>
+        <p>Restrictions are evaluated in the trade path—not merely written into policy.</p>
+      </article>
+      <article class="principle">
+        <span class="eyebrow">03</span>
+        <h2>Audits that hold up</h2>
+        <p>Every decision is designed to be explainable and permanently recorded.</p>
+      </article>
+    </section>
+    <footer class="footer">Not An Insider (Just Lucky) · Prototype environment</footer>
+  </div>
+  <script>function toggleTheme(){let n=document.documentElement;n.dataset.theme=n.dataset.theme==='dark'?'light':'dark';localStorage.theme=n.dataset.theme}document.documentElement.dataset.theme=localStorage.theme||'light'</script>
+</body>
+</html>

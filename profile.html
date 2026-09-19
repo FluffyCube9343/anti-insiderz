@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Profile · Not An Insider</title>
+    <style>
+    :root{--ink:#13211d;--muted:#63736c;--line:#d5ddd7;--page:#f6f8f5;--panel:#fff;--soft:#eef3ee;--accent:#176b51;--accent-ink:#e9f9ed;--warning:#a85f10;--display:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
+    html[data-theme="dark"]{--ink:#eff5f0;--muted:#9ba9a1;--line:#314039;--page:#101714;--panel:#17201b;--soft:#1d2922;--accent:#7dd69c;--accent-ink:#102319;--warning:#efb35b;color-scheme:dark}
+    *{box-sizing:border-box}
+    body{background:var(--page);color:var(--ink);font:15px/1.5 var(--sans);margin:0;transition:background .2s,color .2s}
+    a{color:inherit;text-decoration:none}
+    .shell{margin:auto;max-width:1160px;padding:22px 30px}
+    .top{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding-bottom:18px}
+    .brand{color:var(--accent);font-size:16px;font-weight:800;letter-spacing:-.055em}
+    .brand-mark{display:inline-block;margin-right:7px;transform:rotate(-25deg)}
+    .nav{align-items:center;display:flex;gap:20px}
+    .nav a{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.02em}
+    .nav a:hover,.nav a.active{color:var(--accent)}
+    .theme{background:var(--soft);border:1px solid var(--line);border-radius:99px;color:var(--ink);cursor:pointer;font-size:12px;padding:6px 9px}
+    .eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .display{font-family:var(--display);font-weight:400;letter-spacing:-.055em;line-height:.98}
+    .button{background:var(--accent);border:1px solid var(--accent);color:var(--accent-ink);display:inline-block;font-size:13px;font-weight:800;padding:11px 15px}
+    .button:hover{background:transparent;color:var(--accent)}
+    .card{background:var(--panel);border:1px solid var(--line)}
+    .muted{color:var(--muted)}
+    .notice{background:var(--soft);border-left:3px solid var(--accent);padding:15px 17px}
+    .footer{border-top:1px solid var(--line);color:var(--muted);font-size:11px;margin-top:35px;padding:18px 0}
+    @media(max-width:650px){.shell{padding:18px}
+    .nav{gap:11px}
+    .nav a{font-size:11px}
+    .top{align-items:flex-start}
+    .theme{margin-top:-4px}
+    }
+  </style>
+    <style>
+    .profile{margin-top:45px;max-width:620px;padding:24px}
+    .row{border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding:14px 0}
+    .row span{color:var(--muted)}
+  </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <a class="brand" href="index.html">
+        <span class="brand-mark">◆</span>not an insider</a>
+        <nav class="nav">
+          <a href="markets.html">Markets</a>
+          <a class="active" href="profile.html">Profile</a>
+          <a href="api-docs.html">API</a>
+          <button class="theme" onclick="toggleTheme()">◐</button>
+        </nav>
+      </header>
+      <section class="profile card">
+        <span class="eyebrow">Verified test profile</span>
+        <h1 class="display" style="font-size:52px;margin:8px 0 25px">Maya Chen</h1>
+        <div class="row">
+          <span>Market access standing</span>
+          <b style="color:var(--accent)">100 / 100 · Good standing</b>
+        </div>
+        <div class="row">
+          <span>Email</span>
+          <b>maya.chen@demo.example</b>
+        </div>
+        <div class="row">
+          <span>Birthday</span>
+          <b>Aug 14, 1997</b>
+        </div>
+        <div class="row">
+          <span>Role</span>
+          <b>Government employee</b>
+        </div>
+        <div class="row">
+          <span>Declared affiliation</span>
+          <b>Government / public policy</b>
+        </div>
+        <div class="row">
+          <span>ANS identity</span>
+          <b>Provider pending</b>
+        </div>
+        <div class="row">
+          <span>Email 2FA</span>
+          <b>Verified locally</b>
+        </div>
+        <p id="last-decision" role="status">
+      </p>
+    </section>
+    <p class="muted" style="font-size:12px;max-width:620px">Politics and government-policy markets are blocked by the affiliation gate for this test profile. Synthetic data only; no real identity or authorization decision is being made.</p>
+  </div>
+  <script>function toggleTheme(){let n=document.documentElement;n.dataset.theme=n.dataset.theme==='dark'?'light':'dark';localStorage.theme=n.dataset.theme}document.documentElement.dataset.theme=localStorage.theme||'light';document.getElementById('last-decision').textContent=sessionStorage.getItem('mayaLastDecision')||'No market reviews yet.';if(sessionStorage.getItem('mayaVerified')!=='yes')location.replace('login.html');</script>
+</body>
+</html>
