@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Transaction · Not An Insider</title>
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+
+  <style>
+
+    .transaction-shell {
+      max-width:1050px;
+      margin:45px auto;
+    }
+
+    .transaction-head {
+      align-items:flex-end;
+      display:flex;
+      justify-content:space-between;
+      gap:25px;
+      margin-bottom:25px;
+    }
+
+    .transaction-head h1 {
+      font-size:52px;
+      margin:7px 0;
+    }
+
+    .balance {
+      text-align:right;
+    }
+
+    .balance span {
+      color:var(--muted);
+      display:block;
+      font-size:11px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .balance strong {
+      color:var(--accent);
+      font-size:24px;
+    }
+
+
+    /* MAIN PAYMENT LAYOUT */
+
+    .checkout {
+      display:grid;
+      grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr);
+      gap:20px;
+      align-items:start;
+    }
+
+    .checkout-panel {
+      padding:26px;
+    }
+
+    .checkout-panel h2 {
+      font-size:25px;
+      margin:6px 0 20px;
+    }
+
+
+    /* MARKET */
+
+    .market-summary {
+      background:var(--soft);
+      border:1px solid var(--line);
+      padding:18px;
+      margin-bottom:25px;
+    }
+
+    .market-summary h2 {
+      font-size:18px;
+      line-height:1.4;
+      margin:5px 0 0;
+    }
+
+
+    /* YES / NO */
+
+    .position-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin:10px 0 25px;
+    }
+
+    .position {
+      background:var(--soft);
+      border:1px solid var(--line);
+      color:var(--ink);
+      cursor:pointer;
+      padding:17px;
+      text-align:left;
+      transition:.15s;
+    }
+
+    .position:hover {
+      border-color:var(--accent);
+    }
+
+    .position.selected {
+      background:var(--accent);
+      border-color:var(--accent);
+      color:var(--accent-ink);
+    }
+
+    .position-label {
+      display:block;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+
+    .position-price {
+      display:block;
+      font-size:27px;
+      font-weight:800;
+      margin-top:4px;
+    }
+
+
+    /* INVESTMENT */
+
+    .field-label {
+      display:block;
+      font-size:12px;
+      font-weight:800;
+      margin:20px 0 7px;
+    }
+
+    .money-input {
+      position:relative;
+    }
+
+    .money-input span {
+      color:var(--muted);
+      font-size:22px;
+      left:15px;
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+    }
+
+    .money-input input {
+      background:var(--page);
+      border:1px solid var(--line);
+      color:var(--ink);
+      font:700 25px var(--sans);
+      padding:15px 15px 15px 35px;
+      width:100%;
+    }
+
+    .money-input input:focus {
+      border-color:var(--accent);
+      outline:none;
+    }
+
+
+    /* PAYMENT METHODS */
+
+    .payment-methods {
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:9px;
+      margin-top:10px;
+    }
+
+    .payment-method {
+      background:var(--page);
+      border:1px solid var(--line);
+      color:var(--ink);
+      cursor:pointer;
+      font:inherit;
+      font-weight:750;
+      padding:13px;
+    }
+
+    .payment-method:hover {
+      border-color:var(--accent);
+    }
+
+    .payment-method.selected {
+      border:2px solid var(--accent);
+      color:var(--accent);
+    }
+
+
+    /* CARD UI */
+
+    #card-section {
+      display:none;
+      margin-top:18px;
+    }
+
+    .card-fields {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .card-placeholder {
+      background:var(--soft);
+      border:1px solid var(--line);
+      color:var(--muted);
+      padding:16px;
+      font-size:12px;
+    }
+
+
+    /* ORDER SUMMARY */
+
+    .order {
+      position:sticky;
+      top:20px;
+    }
+
+    .order-row {
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      padding:13px 0;
+    }
+
+    .order-row span {
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .order-row strong {
+      text-align:right;
+    }
+
+
+    /* PAYOUT HERO */
+
+    .return-box {
+      background:var(--soft);
+      border:1px solid var(--accent);
+      margin:20px 0;
+      padding:20px;
+    }
+
+    .return-box span {
+      color:var(--muted);
+      display:block;
+      font-size:11px;
+      font-weight:700;
+    }
+
+    .return-box strong {
+      color:var(--accent);
+      display:block;
+      font-size:38px;
+      letter-spacing:-.04em;
+      margin:3px 0;
+    }
+
+    .profit {
+      color:var(--accent);
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .risk {
+      color:var(--warning);
+      font-size:12px;
+      margin-top:8px;
+    }
+
+
+    /* BUTTON */
+
+    .purchase {
+      cursor:pointer;
+      font-size:14px;
+      margin-top:10px;
+      padding:15px;
+      width:100%;
+    }
+
+    .purchase:disabled {
+      cursor:not-allowed;
+      opacity:.5;
+    }
+
+    .trade-lock {
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.5;
+      margin-top:10px;
+      text-align:center;
+    }
+
+
+    /* SUCCESS */
+
+    .success {
+      display:none;
+      padding:55px 30px;
+      text-align:center;
+    }
+
+    .success-mark {
+      align-items:center;
+      background:var(--accent);
+      border-radius:50%;
+      color:var(--accent-ink);
+      display:flex;
+      font-size:35px;
+      height:75px;
+      justify-content:center;
+      margin:0 auto 20px;
+      width:75px;
+    }
+
+    .success h1 {
+      font-size:45px;
+      margin:10px 0;
+    }
+
+    .success-actions {
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin-top:25px;
+    }
+
+
+    @media(max-width:760px) {
+
+      .checkout {
+        grid-template-columns:1fr;
+      }
+
+      .transaction-head {
+        align-items:flex-start;
+        flex-direction:column;
+      }
+
+      .balance {
+        text-align:left;
+      }
+
+      .order {
+        position:static;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="shell">
+
+
+  <!-- HEADER -->
+
+  <header class="top">
+
+    <a
+      class="brand"
+      href="index.html"
+    >
+      <span class="brand-mark">◆</span>
+      not an insider
+    </a>
+
+
+    <nav class="nav">
+
+      <a href="markets.html">
+        Markets
+      </a>
+
+      <a href="profile.html">
+        Profile
+      </a>
+
+      <a href="api-docs.html">
+        API
+      </a>
+
+      <button
+        class="theme"
+        onclick="toggleTheme()"
+      >
+        ◐
+      </button>
+
+    </nav>
+
+  </header>
+
+
+
+  <!-- TRANSACTION PAGE -->
+
+  <main
+    class="transaction-shell"
+    id="checkout-page"
+  >
+
+
+    <div class="transaction-head">
+
+      <div>
+
+        <span class="eyebrow">
+          Trade checkout
+        </span>
+
+        <h1 class="display">
+          Review your position.
+        </h1>
+
+        <span class="muted">
+          Confirm your position, amount and payment method before submitting.
+        </span>
+
+      </div>
+
+
+      <div class="balance">
+
+        <span>
+          Available balance
+        </span>
+
+        <strong id="balance">
+          $500.00
+        </strong>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="checkout">
+
+
+      <!-- LEFT SIDE -->
+
+      <section class="card checkout-panel">
+
+
+        <div class="market-summary">
+
+          <span
+            class="eyebrow"
+            id="market-category"
+          >
+            Market
+          </span>
+
+          <h2 id="market-title">
+            Loading market...
+          </h2>
+
+        </div>
+
+
+
+        <span class="field-label">
+          Choose your position
+        </span>
+
+
+        <div class="position-grid">
+
+
+          <button
+            class="position selected"
+            id="yes-position"
+            onclick="selectPosition('yes')"
+          >
+
+            <span class="position-label">
+              YES
+            </span>
+
+            <strong
+              class="position-price"
+              id="yes-price"
+            >
+              —
+            </strong>
+
+          </button>
+
+
+
+          <button
+            class="position"
+            id="no-position"
+            onclick="selectPosition('no')"
+          >
+
+            <span class="position-label">
+              NO
+            </span>
+
+            <strong
+              class="position-price"
+              id="no-price"
+            >
+              —
+            </strong>
+
+          </button>
+
+
+        </div>
+
+
+
+        <label
+          class="field-label"
+          for="investment"
+        >
+          Amount to invest
+        </label>
+
+
+        <div class="money-input">
+
+          <span>
+            $
+          </span>
+
+          <input
+            id="investment"
+            type="number"
+            min="1"
+            step="1"
+            value="25"
+            oninput="calculateTrade()"
+          >
+
+        </div>
+
+
+
+        <!-- PAYMENT -->
+
+        <span class="field-label">
+          Payment method
+        </span>
+
+
+        <div class="payment-methods">
+
+
+          <button
+            class="payment-method selected"
+            onclick="selectPayment('Apple Pay', this)"
+          >
+            Apple Pay
+          </button>
+
+
+          <button
+            class="payment-method"
+            onclick="selectPayment('Venmo', this)"
+          >
+            Venmo
+          </button>
+
+
+          <button
+            class="payment-method"
+            onclick="selectPayment('Cash App', this)"
+          >
+            Cash App
+          </button>
+
+
+          <button
+            class="payment-method"
+            onclick="selectPayment('Card', this)"
+          >
+            Credit / debit card
+          </button>
+
+
+        </div>
+
+
+
+        <!-- CARD PROVIDER PLACEHOLDER -->
+
+        <div id="card-section">
+
+          <span class="field-label">
+            Card
+          </span>
+
+          <div class="card-placeholder">
+            Secure card entry would appear here through the connected payment provider. Card numbers and security codes should not be stored by this application.
+          </div>
+
+          <label style="display:block;margin-top:12px">
+
+            <input
+              type="checkbox"
+              id="save-payment"
+            >
+
+            Save this payment method to my profile
+
+          </label>
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- RIGHT SIDE -->
+
+      <aside class="card checkout-panel order">
+
+
+        <span class="eyebrow">
+          Order summary
+        </span>
+
+
+        <h2>
+          Your trade
+        </h2>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Position
+          </span>
+
+          <strong id="summary-position">
+            YES
+          </strong>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Market price
+          </span>
+
+          <strong id="summary-price">
+            —
+          </strong>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Investment budget
+          </span>
+
+          <strong id="summary-budget">
+            $25.00
+          </strong>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Actual trade cost
+          </span>
+
+          <strong id="summary-cost">
+            —
+          </strong>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Contracts
+          </span>
+
+          <strong id="summary-contracts">
+            —
+          </strong>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Payment
+          </span>
+
+          <strong id="summary-payment">
+            Apple Pay
+          </strong>
+
+        </div>
+
+
+
+        <div class="return-box">
+
+          <span>
+            Return if your position is correct
+          </span>
+
+          <strong id="potential-return">
+            $0.00
+          </strong>
+
+          <div
+            class="profit"
+            id="potential-profit"
+          >
+            +$0.00 potential profit
+          </div>
+
+          <div
+            class="risk"
+            id="maximum-loss"
+          >
+            Maximum loss: $0.00
+          </div>
+
+        </div>
+
+
+
+        <div class="order-row">
+
+          <span>
+            Unspent budget
+          </span>
+
+          <strong id="unspent">
+            $0.00
+          </strong>
+
+        </div>
+
+
+
+        <button
+          class="button purchase"
+          id="purchase-button"
+          onclick="purchaseTrade()"
+        >
+          Purchase trade →
+        </button>
+
+
+        <p class="trade-lock">
+          Trading for this market locks at
+          <strong id="lock-time">
+            11:00 PM ET
+          </strong>.
+          Orders cannot be submitted after the market's trading deadline.
+        </p>
+
+
+      </aside>
+
+
+    </div>
+
+
+  </main>
+
+
+
+  <!-- SUCCESS SCREEN -->
+
+  <section
+    class="card transaction-shell success"
+    id="success-page"
+  >
+
+    <div class="success-mark">
+      ✓
+    </div>
+
+    <span class="eyebrow">
+      Transaction successful
+    </span>
+
+    <h1 class="display">
+      Position opened.
+    </h1>
+
+    <p class="muted">
+      Your transaction was recorded in your audit log.
+    </p>
+
+
+    <div
+      class="market-summary"
+      style="
+        max-width:500px;
+        margin:25px auto;
+        text-align:left
+      "
+    >
+
+      <strong id="success-market"></strong>
+
+      <p
+        class="muted"
+        id="success-details"
+      ></p>
+
+    </div>
+
+
+    <div class="success-actions">
+
+      <a
+        class="button"
+        href="markets.html"
+      >
+        Back to markets
+      </a>
+
+      <a
+        class="button"
+        href="profile.html"
+      >
+        View audit log
+      </a>
+
+    </div>
+
+  </section>
+
+
+</div>
+
+
+
+<script>
+
+"use strict";
+
+
+/*
+ * ============================================================
+ * HELPERS
+ * ============================================================
+ */
+
+const get =
+  id =>
+    document.getElementById(id);
+
+
+const money =
+  value =>
+    "$" +
+    Number(value || 0)
+      .toFixed(2);
+
+
+
+/*
+ * ============================================================
+ * LOAD USER
+ * ============================================================
+ */
+
+const storedUser =
+  sessionStorage.getItem("user");
+
+
+if (
+  !storedUser ||
+  sessionStorage.getItem("verified") !== "yes"
+) {
+
+  location.replace("login.html");
+
+}
+
+
+const user =
+  JSON.parse(storedUser);
+
+
+
+/*
+ * ============================================================
+ * LOAD SELECTED MARKET
+ * ============================================================
+ *
+ * markets.html will store this immediately
+ * before redirecting here.
+ */
+
+const storedTrade =
+  sessionStorage.getItem("pendingTrade");
+
+
+if (!storedTrade) {
+
+  location.replace("markets.html");
+
+}
+
+
+const trade =
+  JSON.parse(storedTrade);
+
+
+
+/*
+ * Example trade:
+ *
+ * {
+ *   title: "...",
+ *   category: "SPORTS",
+ *   yes: 57,
+ *   side: "yes",
+ *   lockTime: "11:00 PM ET"
+ * }
+ */
+
+
+let side =
+  trade.side || "yes";
+
+
+let paymentMethod =
+  "Apple Pay";
+
+
+/*
+ * Temporary wallet/balance.
+ *
+ * Eventually this should come from
+ * your backend/payment system.
+ */
+
+let balance =
+  Number(
+    localStorage.getItem(
+      "accountBalance"
+    ) || 500
+  );
+
+
+
+/*
+ * ============================================================
+ * INITIAL PAGE
+ * ============================================================
+ */
+
+
+get("market-title").textContent =
+  trade.title;
+
+
+get("market-category").textContent =
+  trade.category || "Market";
+
+
+get("yes-price").textContent =
+  trade.yes + "¢";
+
+
+get("no-price").textContent =
+  (100 - trade.yes) + "¢";
+
+
+get("lock-time").textContent =
+  trade.lockTime ||
+  "11:00 PM ET";
+
+
+get("balance").textContent =
+  money(balance);
+
+
+
+/*
+ * ============================================================
+ * YES / NO SELECTION
+ * ============================================================
+ */
+
+
+function selectPosition(position) {
+
+  side =
+    position;
+
+
+  get("yes-position")
+    .classList
+    .toggle(
+      "selected",
+      side === "yes"
+    );
+
+
+  get("no-position")
+    .classList
+    .toggle(
+      "selected",
+      side === "no"
+    );
+
+
+  calculateTrade();
+
+}
+
+
+
+/*
+ * ============================================================
+ * PAYMENT SELECTION
+ * ============================================================
+ */
+
+
+function selectPayment(
+  method,
+  element
+) {
+
+  paymentMethod =
+    method;
+
+
+  document
+    .querySelectorAll(
+      ".payment-method"
+    )
+    .forEach(button => {
+
+      button.classList.remove(
+        "selected"
+      );
+
+    });
+
+
+  element.classList.add(
+    "selected"
+  );
+
+
+  get("summary-payment").textContent =
+    paymentMethod;
+
+
+  /*
+   * Show provider-controlled card
+   * UI placeholder when Card is chosen.
+   */
+
+  get("card-section").style.display =
+    paymentMethod === "Card"
+      ? "block"
+      : "none";
+
+}
+
+
+
+/*
+ * ============================================================
+ * TRADE CALCULATOR
+ * ============================================================
+ */
+
+
+function calculateTrade() {
+
+  const budget =
+    Number(
+      get("investment").value
+    );
+
+
+  const price =
+    side === "yes"
+      ? trade.yes
+      : 100 - trade.yes;
+
+
+  const priceDollars =
+    price / 100;
+
+
+
+  /*
+   * Invalid amount.
+   */
+
+  if (
+    !Number.isFinite(budget) ||
+    budget <= 0
+  ) {
+
+    get("purchase-button").disabled =
+      true;
+
+    return null;
+
+  }
+
+
+
+  /*
+   * Number of whole contracts the
+   * budget can purchase.
+   */
+
+  const contracts =
+    Math.floor(
+      budget /
+      priceDollars
+    );
+
+
+  const cost =
+    contracts *
+    priceDollars;
+
+
+  /*
+   * Each winning contract settles
+   * to $1.
+   */
+
+  const potentialReturn =
+    contracts;
+
+
+  const potentialProfit =
+    potentialReturn -
+    cost;
+
+
+  /*
+   * If the position loses,
+   * the amount paid is at risk.
+   */
+
+  const maximumLoss =
+    cost;
+
+
+  const unspent =
+    budget -
+    cost;
+
+
+
+  /*
+   * UPDATE UI
+   */
+
+
+  get("summary-position").textContent =
+    side.toUpperCase();
+
+
+  get("summary-price").textContent =
+    price + "¢";
+
+
+  get("summary-budget").textContent =
+    money(budget);
+
+
+  get("summary-cost").textContent =
+    money(cost);
+
+
+  get("summary-contracts").textContent =
+    contracts.toLocaleString("en-US");
+
+
+  get("potential-return").textContent =
+    money(potentialReturn);
+
+
+  get("potential-profit").textContent =
+    "+" +
+    money(potentialProfit) +
+    " potential profit";
+
+
+  get("maximum-loss").textContent =
+    "Maximum loss: " +
+    money(maximumLoss);
+
+
+  get("unspent").textContent =
+    money(unspent);
+
+
+
+  /*
+   * Disable purchasing if:
+   *
+   * - can't afford one contract
+   * - budget exceeds balance
+   */
+
+  get("purchase-button").disabled =
+    contracts < 1 ||
+    cost > balance;
+
+
+
+  return {
+
+    budget,
+
+    price,
+
+    contracts,
+
+    cost,
+
+    potentialReturn,
+
+    potentialProfit,
+
+    maximumLoss,
+
+    unspent
+
+  };
+
+}
+
+
+
+/*
+ * ============================================================
+ * AUDIT STORAGE
+ * ============================================================
+ */
+
+
+function saveAuditTransaction(
+  transaction
+) {
+
+  let auditLog;
+
+
+  try {
+
+    auditLog =
+      JSON.parse(
+        localStorage.getItem(
+          "auditLog"
+        ) || "[]"
+      );
+
+  }
+
+  catch {
+
+    auditLog =
+      [];
+
+  }
+
+
+  auditLog.push(
+    transaction
+  );
+
+
+  localStorage.setItem(
+    "auditLog",
+    JSON.stringify(
+      auditLog
+    )
+  );
+
+}
+
+
+
+/*
+ * ============================================================
+ * PURCHASE TRADE
+ * ============================================================
+ */
+
+
+function purchaseTrade() {
+
+  const calculation =
+    calculateTrade();
+
+
+  if (!calculation)
+    return;
+
+
+  if (
+    calculation.contracts < 1
+  ) {
+
+    alert(
+      "Enter enough to purchase at least one contract."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    calculation.cost >
+    balance
+  ) {
+
+    alert(
+      "Your trade exceeds your available balance."
+    );
+
+    return;
+
+  }
+
+
+
+  /*
+   * Deduct from temporary balance.
+   */
+
+  balance -=
+    calculation.cost;
+
+
+  localStorage.setItem(
+    "accountBalance",
+    balance.toFixed(2)
+  );
+
+
+
+  /*
+   * Create transaction record.
+   */
+
+  const transaction = {
+
+    id:
+      crypto.randomUUID(),
+
+    userEmail:
+      user.email,
+
+    market:
+      trade.title,
+
+    category:
+      trade.category,
+
+    side:
+      side,
+
+    price:
+      calculation.price,
+
+    contracts:
+      calculation.contracts,
+
+    cost:
+      calculation.cost,
+
+    potentialReturn:
+      calculation.potentialReturn,
+
+    potentialProfit:
+      calculation.potentialProfit,
+
+    maximumLoss:
+      calculation.maximumLoss,
+
+    paymentMethod:
+      paymentMethod,
+
+    status:
+      "OPEN",
+
+    realizedProfit:
+      0,
+
+    timestamp:
+      new Date()
+        .toISOString()
+
+  };
+
+
+
+  /*
+   * Save into audit history.
+   */
+
+  saveAuditTransaction(
+    transaction
+  );
+
+
+
+  /*
+   * Pending checkout is complete.
+   */
+
+  sessionStorage.removeItem(
+    "pendingTrade"
+  );
+
+
+
+  /*
+   * Update success screen.
+   */
+
+  get("success-market").textContent =
+    transaction.market;
+
+
+  get("success-details").textContent =
+    transaction.side.toUpperCase() +
+    " · " +
+    transaction.contracts +
+    " contracts · " +
+    money(transaction.cost) +
+    " invested · " +
+    money(
+      transaction.potentialReturn
+    ) +
+    " potential return";
+
+
+
+  /*
+   * Swap checkout → success.
+   */
+
+  get("checkout-page").style.display =
+    "none";
+
+
+  get("success-page").style.display =
+    "block";
+
+}
+
+
+
+/*
+ * ============================================================
+ * THEME
+ * ============================================================
+ */
+
+
+function toggleTheme() {
+
+  const root =
+    document.documentElement;
+
+
+  root.dataset.theme =
+    root.dataset.theme === "dark"
+      ? "light"
+      : "dark";
+
+
+  localStorage.theme =
+    root.dataset.theme;
+
+}
+
+
+document.documentElement.dataset.theme =
+  localStorage.theme ||
+  "light";
+
+
+
+/*
+ * Initial calculation.
+ */
+
+selectPosition(side);
+
+calculateTrade();
+
+</script>
+
+
+</body>
+
+</html>
