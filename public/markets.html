@@ -87,19 +87,53 @@
     .side{display:none}
     }
   </style>
-  <link rel="stylesheet" href="/integration.css"></head>
-<body><div class="shell">
-<header class="top"><a class="brand" href="index.html">◆ not an insider</a><nav class="nav"><a class="active" href="markets.html">Markets</a><a href="#audit">Live audit</a><a href="#admin">Admin</a><a href="profile.html">Profile</a><button class="theme" onclick="toggleTheme()">◐</button></nav></header>
-<div id="setup-status" class="status" role="status">Checking backend setup…</div><p id="refresh-error" class="error" role="alert"></p>
-<div class="workspace"><aside class="side card"><span class="eyebrow">Acting trader</span><label for="agent-select">Registered identity</label><select id="agent-select"></select><h3 id="agent-name">Loading…</h3><div id="agent-uri" class="agent"></div><div class="agent"><b>Declared affiliations</b><span id="agent-affiliations"></span></div><label for="private-key">Signing key (PKCS#8 PEM)</label><input id="private-key" type="file" accept=".pem,.key"><p id="key-status" class="muted" role="status"></p><p class="muted">Your private key stays in this browser tab. Reloading or switching traders clears it.</p></aside>
-<main><div class="board-head"><div><span class="eyebrow">Supabase market board</span><h1 class="display">Markets</h1></div><span class="muted">Pari-mutuel pools · Nessie sandbox</span></div><section id="list"></section><p id="trade-result" role="status"></p><button class="button" id="replay" disabled>Replay last signed request</button></main></div>
-<section class="card section"><span class="eyebrow">Partner's Polymarket feed</span><h2>External reference odds</h2><p class="muted">Read-only context, not prices for the Supabase pools above. No orders are sent to Polymarket or Kalshi.</p><div id="reference-odds" class="pair">Loading reference markets…</div></section>
-<script type="module" src="/reference-odds.js"></script>
-<section id="audit" class="card section"><span class="eyebrow">Persisted decision history</span><h2>Live audit</h2><p id="audit-status" class="muted"></p><div id="audit-feed"></div></section>
-<section class="card section"><h2>Payment status</h2><p class="muted">Pending payments do not increase the pool. Reconcile uncertain payments before retrying anything.</p><div id="payments"></div></section>
-<section id="admin" class="card section"><span class="eyebrow">Operator controls</span><h2>Demo administration</h2><label for="admin-key">Admin key</label><input id="admin-key" type="password" autocomplete="off"><label for="admin-market">Market</label><select id="admin-market"></select><div class="row-actions"><button id="event-button" class="button">Schedule material event in 1 minute</button><button id="reconcile-button" class="button">Reconcile pending payments</button></div><label for="winning-outcome">Winning outcome</label><select id="winning-outcome"><option>A</option><option>B</option></select><div class="row-actions"><button id="resolve-button" class="button">Close market & queue payouts</button><button id="payout-button" class="button">Send next queued payout</button></div>
-<details style="margin-top:20px"><summary>Provision a registered trader</summary><p>Reads the issued ANS certificate and verifies the linked Nessie account. No private key is sent.</p><form id="provision-form"><label for="registry-id">ANS registry UUID (agents/traderN/agent_id)</label><input id="registry-id" required><label for="wallet-id">Nessie account ID</label><input id="wallet-id" required><label for="affiliations">Affiliations, comma-separated (leave empty for clean trader)</label><input id="affiliations" placeholder="vt-athletics"><button class="button" style="margin-top:15px">Verify & save trader</button></form></details><p id="admin-result" role="status"></p></section>
-<details class="section"><summary>Team proposal preview — separate, unconnected prototype</summary><section class="card" style="padding:24px;margin-top:32px" aria-labelledby="propose-title">
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <a class="brand" href="index.html">
+        <span class="brand-mark">◆</span>not an insider</a>
+        <nav class="nav">
+          <a class="active" href="markets.html">Markets</a>
+          <a href="profile.html">Profile</a>
+          <a href="api-docs.html">API</a>
+          <button class="theme" onclick="toggleTheme()">◐</button>
+        </nav>
+      </header>
+      <section class="notice">
+        <b>Demo account · Maya Chen</b>
+        <br>
+        <span class="muted">Government employee · politics and government-policy markets are restricted for this profile.</span>
+      </section>
+      <div class="workspace">
+        <aside class="side card">
+          <span class="eyebrow">Market access</span>
+          <div class="score">100<small style="font-size:14px">/100</small>
+          </div>
+          <b>Good standing</b>
+          <p class="muted" style="font-size:12px">Standing is an explainable record of platform-policy outcomes—not a behavioral credit score.</p>
+          <div class="agent">
+            <b>ANS identity</b>Integration pending</div>
+            <div class="agent">
+              <b>Affiliation</b>Government employee</div>
+              <div class="agent">
+                <b>Clearance</b>Required per trade</div>
+                <div class="agent">
+                  <b>Audit</b>Latest local review</div>
+                </aside>
+                <main>
+                  <div class="board-head">
+                    <div>
+                      <span class="eyebrow">Demo market board</span>
+                      <h1 class="display">Markets</h1>
+                    </div>
+                    <span class="muted" style="font-size:12px" id="odds-age">Pulling live Polymarket odds...</span>
+                  </div>
+                  <section id="list">
+                  </section>
+                </main>
+              </div>
+              <section class="card" style="padding:24px;margin-top:32px" aria-labelledby="propose-title">
   <h2 id="propose-title">Propose a market</h2>
   <p>Propose → AI evidence review → Team approval or denial → Publish</p>
   <p class="muted">Local preview. AI research and authenticated reviewer access are awaiting integration.</p>
@@ -128,10 +162,62 @@
     <p id="proposal-status" role="status"></p>
   </section>
 </section>
-</details>
-<footer class="footer">Not An Insider (Just Lucky) · ANS identity checks · Nessie sandbox funds · Supabase audit history</footer></div>
-<div id="overlay" class="overlay" onclick="closeTicket()"></div><section id="ticket" class="ticket" role="dialog" aria-modal="true" aria-labelledby="title"><button class="close" onclick="closeTicket()" aria-label="Close trade review">×</button><span class="eyebrow" id="category"></span><h2 id="title"></h2><div class="choices"><button id="side-A" class="choice selected" onclick="selectSide('A')">Outcome A / Yes</button><button id="side-B" class="choice" onclick="selectSide('B')">Outcome B / No</button></div><label for="amount">Stake in sandbox dollars</label><input id="amount" type="number" min="0.01" max="10000" step="0.01" value="10" oninput="updateYield()"><div id="yield" class="detail"></div><div id="info" class="detail"></div><div id="clearance" class="clearance" role="status"></div><button id="continue" class="button" style="margin-top:18px">Sign & submit trade</button></section>
-<script>const get=id=>document.getElementById(id);let proposalDecided = false;
+<footer class="footer">All prices and yields below are illustrative. This static prototype does not submit or settle trades.</footer>
+            </div>
+            <div class="overlay" id="overlay" onclick="closeTicket()">
+            </div>
+            <section class="ticket" id="ticket" role="dialog" aria-modal="true" aria-labelledby="title" style="max-height:90vh;overflow:auto">
+              <button class="close" aria-label="Close trade review" onclick="closeTicket()">×</button>
+              <span class="eyebrow" id="category">
+            </span>
+            <h2 id="title">
+          </h2>
+          <div class="choices">
+            <button class="choice selected" id="yes" onclick="selectSide('yes')">Yes <span id="yesq">
+          </span>
+        </button>
+        <button class="choice" id="no" onclick="selectSide('no')">No <span id="noq">
+      </span>
+    </button>
+  </div>
+  <label for="amount" class="eyebrow" style="display:block;margin-top:18px">Test amount</label>
+  <input id="amount" type="number" min="1" value="25" oninput="updateYield()">
+  <div class="payout-summary" id="yield" role="status" aria-live="polite" aria-atomic="true">
+  </div>
+  <details class="access-explainer" open>
+    <summary>Your access score: 100 / 100 · Good standing</summary>
+    <p>Your score describes your platform standing. The planned premium-market policy will require a minimum score, shown on each eligible market. Thresholds and score deductions are still to be configured; this demo keeps Maya at 100.</p>
+    <p><strong>Affiliation checks apply at every score.</strong> Maya's government role blocks the politics and government-policy markets even at 100. An ordinary blocked review does not reduce her score or ban her account.</p>
+    <p>The score does not change contract prices, potential payouts, or the chance of winning. Final access also requires identity reconfirmation and the market-specific clearance check below.</p>
+  </details>
+  <div class="detail" id="info">
+  </div>
+  <p class="muted">Reconfirm the demo account: maya.chen@demo.example · code 246810</p>
+  <label for="review-email">Account email</label>
+  <input id="review-email" type="email" autocomplete="off">
+  <label for="review-code">Demo verification code</label>
+  <input id="review-code" inputmode="numeric" maxlength="6" autocomplete="off">
+  <div class="clearance" id="clearance" role="status" aria-live="polite">
+  </div>
+  <button class="button" id="continue" onclick="clearTrade()" style="margin-top:18px">Reconfirm identity &amp; continue →</button>
+</section>
+<script>
+
+"use strict";
+const get = id => document.getElementById(id);
+const markets = [
+  { category: "SPORTS", title: "Next Virginia Tech game", yes: 57, restricted: false, auto: "vt0", liveOutcome: "Virginia Tech", info: "Live Polymarket odds for the nearest upcoming VT game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
+  { category: "SPORTS", title: "Following Virginia Tech game", yes: 55, restricted: false, auto: "vt1", liveOutcome: "Virginia Tech", info: "Live Polymarket odds for the VT game after the next one. Shows a demo price until Polymarket posts that game. Players and athletics staff (vt-athletics) are restricted." },
+  { category: "POLITICS", title: "Will the Virginia abortion protection amendment pass?", yes: 90, restricted: true, slug: "will-the-virginia-abortion-protection-amendment-pass", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted - this is Maya's blocked market." },
+  { category: "POLITICS", title: "Will a new Virginia congressional map be used in the midterms?", yes: 4, restricted: true, slug: "new-virginia-congressional-map-used-in-the-midterms", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted." },
+  { category: "AI", title: "Will the next Claude Opus model be released on September 21?", yes: 31, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-21-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." },
+  { category: "AI", title: "Will the next Claude Opus model be released on September 22?", yes: 30, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-22-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." },
+  { category: "AI", title: "Will the next Claude Opus model be released on September 23?", yes: 1, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-23-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." }
+];
+let active = 0;
+let side = "yes";
+let previousFocus;
+let proposalDecided = false;
 get("proposal-form").addEventListener("submit", event => {
   event.preventDefault();
   const source = new URL(get("proposal-source").value);
@@ -171,4 +257,139 @@ function decideProposal(decision) {
   get("proposal-status").textContent = decision + " in simulation · " + reason +
     " · No market published. Production decisions require verified evidence and an authorized reviewer.";
 }
-</script><script type="module" src="/integration.js"></script></body></html>
+function renderList() {
+get("list").innerHTML = markets.map((m, i) => `
+  <button type="button" class="market card" onclick="openTicket(${i})" style="width:100%;text-align:left;color:var(--ink);font:inherit">
+    <span><span class="label">${m.category}${m.live ? " · LIVE ODDS" : ""}</span><strong style="display:block;margin:8px 0">${m.title}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
+    <span><span class="label">Yes</span><span class="quote" style="display:block">${m.yes}¢</span></span>
+    <span><span class="label">No</span><span class="quote" style="display:block">${100 - m.yes}¢</span></span>
+    <span class="muted">Review →<small style="display:block;color:var(--warning)">◷ Evidence review pending</small></span>
+  </button>`).join("");
+}
+renderList();
+function openTicket(i) {
+  previousFocus = document.activeElement;
+  active = i;
+  side = "yes";
+  const m = markets[i];
+  get("category").textContent = m.category + " · SIMULATED TRADE";
+  get("title").textContent = m.title;
+  get("yesq").textContent = m.yes + "¢";
+  get("noq").textContent = (100 - m.yes) + "¢";
+  get("info").textContent = m.info + " Evidence review pending: this demo market has no verified source bundle. A ✓ Verified badge will require dated supporting sources, clear resolution rules and team approval. Verification cannot guarantee an outcome or eliminate manipulation risk.";
+  get("clearance").className = "clearance";
+  get("clearance").textContent = "Reconfirm Maya's demo email and code to check authorization for this market.";
+  get("review-email").value = "";
+  get("review-code").value = "";
+  get("continue").textContent = "Verify identity & check market access";
+  get("continue").disabled = false;
+  selectSide("yes");
+  get("ticket").classList.add("show");
+  get("overlay").classList.add("show");
+  get("ticket").querySelector(".close").focus();
+}
+function selectSide(value) {
+  side = value;
+  for (const s of ["yes", "no"]) {
+    get(s).className = "choice " + (s === side ? "selected" : "");
+    get(s).setAttribute("aria-pressed", String(s === side));
+  }
+  updateYield();
+}
+function updateYield() {
+  const cents = Math.round(Number(get("amount").value) * 100);
+  const price = side === "yes" ? markets[active].yes : 100 - markets[active].yes;
+  if (!Number.isFinite(cents) || cents < price || cents > 1000000) {
+    get("yield").textContent = "Enter enough for one contract, up to $10,000.";
+    return false;
+  }
+  const contracts = Math.floor(cents / price);
+  const cost = contracts * price / 100;
+  const money = n => "$" + n.toFixed(2);
+  get("yield").innerHTML = `
+    <div class="payout-hero">
+      <span class="payout-label">Total return if your prediction is correct</span>
+      <strong class="payout-total">${money(contracts)}</strong>
+      <span class="payout-profit">+${money(contracts - cost)} potential net profit</span>
+      <p class="payout-footnote">Return includes your original stake. Profit shown before fees.</p>
+    </div>
+    <div class="payout-grid">
+      <div class="payout-cell"><span class="payout-label">Your money in</span><strong class="payout-value">${money(cost)}</strong></div>
+      <div class="payout-cell"><span class="payout-label">Maximum loss if incorrect</span><strong class="payout-value payout-risk">${money(cost)}</strong></div>
+      <div class="payout-cell"><span class="payout-label">${side.toUpperCase()} contracts at ${price}¢</span><strong class="payout-value">${contracts.toLocaleString("en-US")}</strong></div>
+      <div class="payout-cell"><span class="payout-label">Unspent budget</span><strong class="payout-value">${money(cents / 100 - cost)}</strong></div>
+    </div>
+    <p class="payout-footnote">Simulated fixed-price estimate · Whole contracts · Fees excluded · A correct outcome is not guaranteed.</p>`;
+  return true;
+}
+function clearTrade() {
+  const result = get("clearance");
+  if (sessionStorage.getItem("mayaVerified") !== "yes") {
+    result.textContent = "Complete demo email verification on the login page first.";
+    return;
+  }
+  if (get("review-email").value.trim().toLowerCase() !== "maya.chen@demo.example" || get("review-code").value !== "246810") {
+    result.textContent = "Identity check failed. Use Maya's demo email and code 246810.";
+    return;
+  }
+  if (!updateYield()) return;
+  const blocked = markets[active].restricted;
+  result.className = "clearance " + (blocked ? "blocked" : "");
+  result.textContent = blocked
+    ? "BLOCKED · Identity reconfirmed. Maya's government affiliation matches this market's restrictions. No trade permitted. Her account remains in good standing."
+    : "CLEARED · Demo identity reconfirmed; no affiliation restriction matched. Simulated market rules reviewed. No money moved.";
+  sessionStorage.setItem("mayaLastDecision", result.textContent);
+  get("continue").textContent = blocked ? "Access blocked for this market" : "Demo review complete";
+  get("continue").disabled = true;
+}
+function closeTicket() {
+  get("ticket").classList.remove("show");
+  get("overlay").classList.remove("show");
+  previousFocus?.focus();
+}
+document.addEventListener("keydown", event => {
+  if (!get("ticket").classList.contains("show")) return;
+  if (event.key === "Escape") closeTicket();
+  if (event.key === "Tab") {
+    const nodes = [...get("ticket").querySelectorAll("button:not([disabled]), input, a[href]")];
+    const first = nodes[0], last = nodes[nodes.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+});
+function toggleTheme() {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.theme = root.dataset.theme;
+}
+document.documentElement.dataset.theme = localStorage.theme || "light";
+let lastOddsPull = 0;
+async function refreshLiveOdds() {
+  for (const m of markets) {
+    if (!m.slug) continue;
+    try {
+      const r = await fetch(m.auto ? "/api/odds/auto/" + m.auto : "/api/odds/" + encodeURIComponent(m.slug));
+      if (!r.ok) continue;
+      const d = await r.json();
+      const target = (m.liveOutcome || "Yes").toLowerCase();
+      const o = (d.outcomes || []).find(x => String(x.name).toLowerCase() === target);
+      if (o && Number.isFinite(o.price)) { m.yes = Math.round(o.price * 100); m.live = true; if (m.auto && d.question) m.title = d.question; }
+    } catch (e) { /* Polymarket unreachable - static demo price stays */ }
+  }
+  lastOddsPull = Date.now();
+  renderList();
+}
+refreshLiveOdds();
+setInterval(refreshLiveOdds, 10000);
+setInterval(() => {
+  const el = document.getElementById("odds-age");
+  if (!el) return;
+  if (!lastOddsPull) { el.textContent = "Pulling live Polymarket odds..."; return; }
+  const secs = Math.floor((Date.now() - lastOddsPull) / 1000);
+  el.textContent = "Live Polymarket odds pulled " + secs + "s ago · refreshes every 10s";
+}, 1000);
+if (sessionStorage.getItem("mayaVerified") !== "yes") location.replace("login.html");
+
+</script>
+</body>
+</html>
