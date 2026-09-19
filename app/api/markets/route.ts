@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { config } from "@/lib/config";
+import { SupabaseTradeStore } from "@/lib/providers";
+import { createClient } from "@supabase/supabase-js";
+export async function GET() { try { const c = config(); const db = createClient(c.supabaseUrl, c.supabaseServiceKey, { auth: { persistSession: false } }); const { data, error } = await db.from("markets").select("*").eq("status", "open").order("material_event_at", { ascending: true }); if (error) throw error; return NextResponse.json(data.map(m => ({ marketId: m.market_id, subject: m.subject, restrictedAffiliations: m.restricted_affiliations, pool: { outcomeA: Number(m.outcome_a_total), outcomeB: Number(m.outcome_b_total) }, status: m.status, materialEventAt: m.material_event_at }))); } catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 }); } }

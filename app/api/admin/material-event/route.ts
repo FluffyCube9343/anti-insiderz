@@ -1,0 +1,4 @@
+import { NextResponse } from "next/server";
+import { config } from "@/lib/config";
+import { createClient } from "@supabase/supabase-js";
+export async function POST(request: Request) { try { const c = config(); if (request.headers.get("x-demo-key") !== process.env.ADMIN_DEMO_KEY) return NextResponse.json({ error: "Unauthorized" }, { status: 401 }); const body = await request.json() as { marketId?: string; materialEventAt?: string | null }; if (!body.marketId) return NextResponse.json({ error: "marketId is required" }, { status: 400 }); const db = createClient(c.supabaseUrl, c.supabaseServiceKey, { auth: { persistSession: false } }); const { error } = await db.from("markets").update({ material_event_at: body.materialEventAt ?? new Date().toISOString() }).eq("market_id", body.marketId); if (error) throw error; return NextResponse.json({ ok: true }); } catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 }); } }
