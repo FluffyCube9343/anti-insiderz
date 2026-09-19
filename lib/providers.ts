@@ -29,11 +29,21 @@ export class AnsHttpRegistry implements AnsRegistry {
     const r = await fetch(`${this.baseUrl}${endpoint}`, { headers: { Authorization: `sso-key ${this.key}:${this.secret}`, Accept: "application/json" }, cache: "no-store" });
     if (!r.ok) return { valid: false, reason: `ANS returned HTTP ${r.status}` };
     const data = await r.json() as Record<string, unknown>;
-    const status = String(data.status ?? data.lifecycleStatus ?? "").toUpperCase();
-    const expiresAt = String(data.expiresAt ?? "");
+    // agentStatus comes back as a plain string on /v1/agents/{id}, an object on other lanes; accept both plus flat shapes.
+    const rawStatus = data.agentStatus;
+    const status = String(typeof rawStatus === "string" ? rawStatus : ((rawStatus as Record<string, unknown> | null)?.status ?? data.status ?? data.lifecycleStatus ?? "")).toUpperCase();
+    const expiresAt = String(typeof rawStatus === "object" && rawStatus ? ((rawStatus as Record<string, unknown>).expiresAt ?? "") : (data.expiresAt ?? ""));
     if (status !== "ACTIVE") return { valid: false, reason: `ANS lifecycle status is ${status || "missing"}` };
-    if (expiresAt && Number.isFinite(new Date(expiresAt).getTime()) && new Date(expiresAt) <= new Date()) return { valid: false, reason: "ANS registration has expired" };
+    // 0001-01-01 is the registry's zero time, not a real expiry.
+    const exp = new Date(expiresAt);
+    if (expiresAt && Number.isFinite(exp.getTime()) && exp.getFullYear() > 2000 && exp <= new Date()) return { valid: false, reason: "ANS registration has expired" };
     // Public key extraction is deployment-specific; only compare when the RA returns it explicitly.
     return { valid: true, publicKey: typeof data.publicKey === "string" ? data.publicKey : undefined };
   }
+}
+
+// Demo-only rail used when NESSIE_API_KEY is unset: every wallet looks funded and no money actually moves.
+export class DemoPayments implements PaymentRail {
+  async balance(_accountId: string) { return 1_000_000; }
+  async transfer(_fromAccountId: string, _toAccountId: string, _amount: number, _description: string) { /* intentionally empty: demo mode */ }
 }

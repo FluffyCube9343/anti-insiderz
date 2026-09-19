@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { tradeConfig } from "@/lib/config";
-import { AnsHttpRegistry, NessiePayments, SupabaseTradeStore } from "@/lib/providers";
+import { AnsHttpRegistry, DemoPayments, NessiePayments, SupabaseTradeStore } from "@/lib/providers";
 import { TradePipeline } from "@/lib/trade-pipeline";
 import type { TradeRequest } from "@/lib/domain";
 
@@ -8,6 +8,6 @@ function validTrade(value: unknown): value is TradeRequest { const x = value as 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!validTrade(body)) return NextResponse.json({ error: "A signed trade requires tradeId, agentId, marketId, outcome, positive amount, nonce, timestamp, and signature." }, { status: 400 });
-  try { const c = tradeConfig(); const pipeline = new TradePipeline(new SupabaseTradeStore(c.supabaseUrl, c.supabaseServiceKey), new AnsHttpRegistry(c.ansBaseUrl, c.ansKey, c.ansSecret, c.ansLookupTemplate), new NessiePayments(c.nessieBaseUrl, c.nessieKey), c.poolAccountId, c.timingWindowMinutes); return NextResponse.json(await pipeline.execute(body)); }
+  try { const c = tradeConfig(); const pipeline = new TradePipeline(new SupabaseTradeStore(c.supabaseUrl, c.supabaseServiceKey), new AnsHttpRegistry(c.ansBaseUrl, c.ansKey, c.ansSecret, c.ansLookupTemplate), (c.nessieKey ? new NessiePayments(c.nessieBaseUrl, c.nessieKey) : new DemoPayments()), c.poolAccountId, c.timingWindowMinutes); return NextResponse.json(await pipeline.execute(body)); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Trade processing failed." }, { status: 503 }); }
 }
