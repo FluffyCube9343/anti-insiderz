@@ -1,114 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width,initial-scale=1" name="viewport"/>
-  <title>
-   Access · Not An Insider
-  </title>
-  <link href="styles.css" rel="stylesheet"/>
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width,initial-scale=1" name="viewport" />
+
+  <title>Access · Not An Insider</title>
+
+  <link href="styles.css" rel="stylesheet" />
+
   <style>
-   body{display:grid;min-height:100vh;place-items:center}.access{max-width:470px;width:100%}.access .top{margin-bottom:45px}.form{padding:30px}.form h1{font-size:52px;margin:8px 0}.form p{margin-bottom:22px}label{display:block;font-size:12px;font-weight:800;margin:15px 0 6px}input,select{background:var(--page);border:1px solid var(--line);color:var(--ink);font:inherit;padding:11px;width:100%}input:focus,select:focus{border-color:var(--accent);outline:none}.form .button{cursor:pointer;margin-top:24px;width:100%}#message{font-size:12px;min-height:20px}.verify{display:none}.code{font-size:24px;letter-spacing:.25em;text-align:center}
+    body {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+    }
+
+    .access {
+      max-width: 470px;
+      width: 100%;
+    }
+
+    .access .top {
+      margin-bottom: 45px;
+    }
+
+    .form {
+      padding: 30px;
+    }
+
+    .form h1 {
+      font-size: 52px;
+      margin: 8px 0;
+    }
+
+    .form p {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 15px 0 6px;
+    }
+
+    input,
+    select {
+      background: var(--page);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font: inherit;
+      padding: 11px;
+      width: 100%;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .form .button {
+      cursor: pointer;
+      margin-top: 24px;
+      width: 100%;
+    }
+
+    #message {
+      font-size: 12px;
+      min-height: 20px;
+    }
+
+    .verify {
+      display: none;
+    }
+
+    .code {
+      font-size: 24px;
+      letter-spacing: .25em;
+      text-align: center;
+    }
   </style>
- </head>
- <body>
+</head>
+
+<body>
+
   <main class="access">
-   <header class="top">
-    <a class="brand" href="index.html">
-     <span class="brand-mark">
-      ◆
-     </span>
-     not an insider
-    </a>
-    <button class="theme" onclick="toggleTheme()">
-     ◐
-    </button>
-   </header>
-   <section class="form card" id="profile">
-    <span class="eyebrow">
-     Test onboarding
-    </span>
-    <h1 class="display">
-     Set up access.
-    </h1>
-    <p class="muted">
-     Local-only test profile. It does not send, store, search, or enrich personal data.
-    </p>
-    <form id="signup">
-     <label for="name">
-      Name
-     </label>
-     <input id="name" required="" value="Maya Chen"/>
-     <label for="email">
-      Email
-     </label>
-     <input id="email" required="" type="email" value="maya.chen@demo.example"/>
-     <label for="birthday">
-      Birthday
-     </label>
-     <input id="birthday" required="" type="date" value="1997-08-14"/>
-     <label for="role">
-      Role or relationship
-     </label>
-     <select id="role" required="">
-      <option>
-       Government employee
-      </option>
-      <option>
-       Employee
-      </option>
-      <option>
-       Executive or director
-      </option>
-      <option>
-       Contractor or adviser
-      </option>
-      <option>
-       Investor
-      </option>
-      <option>
-       Public official
-      </option>
-      <option>
-       Household member
-      </option>
-     </select>
-     <button class="button">
-      Continue to verification →
-     </button>
-    </form>
-   </section>
-   <section class="form card verify" id="verification">
-    <span class="eyebrow">
-     Email verification
-    </span>
-    <h1 class="display">
-     Confirm it's you.
-    </h1>
-    <p class="muted">
-     A code would be sent to
-     <b>
-      maya.chen@demo.example
-     </b>
-     . For this local test, enter
-     <b>
-      246810
-     </b>
-     .
-    </p>
-    <label for="code">
-     Six-digit code
-    </label>
-    <input class="code" id="code" inputmode="numeric" maxlength="6" placeholder="000000"/>
-    <button class="button" onclick="verify()">
-     Verify and enter markets →
-    </button>
-    <p class="muted" id="message">
-    </p>
-   </section>
+
+    <!-- Header -->
+    <header class="top">
+
+      <a class="brand" href="index.html">
+        <span class="brand-mark">◆</span>
+        not an insider
+      </a>
+
+      <button class="theme" onclick="toggleTheme()">
+        ◐
+      </button>
+
+    </header>
+
+
+    <!-- PROFILE / SIGNUP SCREEN -->
+    <section class="form card" id="profile">
+
+      <span class="eyebrow">
+        Test onboarding
+      </span>
+
+      <h1 class="display">
+        Set up access.
+      </h1>
+
+      <p class="muted">
+        Local-only test profile. It does not send, store,
+        search, or enrich personal data.
+      </p>
+
+
+      <form id="signup">
+
+        <label for="name">
+          Name
+        </label>
+
+        <input
+          id="name"
+          type="text"
+          placeholder="Your name"
+          required
+        />
+
+
+        <label for="email">
+          Email
+        </label>
+
+        <input
+          id="email"
+          type="email"
+          placeholder="you@example.com"
+          required
+        />
+
+
+        <label for="birthday">
+          Birthday
+        </label>
+
+        <input
+          id="birthday"
+          type="date"
+          required
+        />
+
+
+        <label for="role">
+          Role or relationship
+        </label>
+
+        <select id="role" required>
+
+          <option value="" disabled selected>
+            Select a role
+          </option>
+
+          <option value="Government employee">
+            Government employee
+          </option>
+
+          <option value="Employee">
+            Employee
+          </option>
+
+          <option value="Executive or director">
+            Executive or director
+          </option>
+
+          <option value="Contractor or adviser">
+            Contractor or adviser
+          </option>
+
+          <option value="Investor">
+            Investor
+          </option>
+
+          <option value="Public official">
+            Public official
+          </option>
+
+          <option value="Household member">
+            Household member
+          </option>
+
+        </select>
+
+
+        <button class="button" type="submit">
+          Continue to verification →
+        </button>
+
+      </form>
+
+    </section>
+
+
+
+    <!-- VERIFICATION SCREEN -->
+    <section class="form card verify" id="verification">
+
+      <span class="eyebrow">
+        Email verification
+      </span>
+
+      <h1 class="display">
+        Confirm it's you.
+      </h1>
+
+      <p class="muted">
+        A code would be sent to
+        <b id="verificationEmail"></b>.
+
+        For this local test, enter
+        <b>246810</b>.
+      </p>
+
+
+      <label for="code">
+        Six-digit code
+      </label>
+
+      <input
+        class="code"
+        id="code"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="000000"
+      />
+
+
+      <button
+        class="button"
+        type="button"
+        onclick="verify()"
+      >
+        Verify and enter markets →
+      </button>
+
+
+      <p class="muted" id="message"></p>
+
+    </section>
+
   </main>
+
+
+
   <script>
-   function toggleTheme(){let n=document.documentElement;n.dataset.theme=n.dataset.theme==='dark'?'light':'dark';localStorage.theme=n.dataset.theme}document.documentElement.dataset.theme=localStorage.theme||'light';signup.onsubmit=e=>{e.preventDefault();profile.style.display='none';verification.style.display='block'};function verify(){message.textContent=code.value==='246810'?'Verified. Loading market access…':'Use the test code 246810.';if(code.value==='246810'){sessionStorage.setItem('mayaVerified','yes');setTimeout(()=>location='markets.html',500)}}
+
+    /*
+     * ----------------------------
+     * THEME
+     * ----------------------------
+     */
+
+    function toggleTheme() {
+
+      const root = document.documentElement;
+
+      root.dataset.theme =
+        root.dataset.theme === "dark"
+          ? "light"
+          : "dark";
+
+      localStorage.theme = root.dataset.theme;
+    }
+
+
+    document.documentElement.dataset.theme =
+      localStorage.theme || "light";
+
+
+
+    /*
+     * ----------------------------
+     * GET HTML ELEMENTS
+     * ----------------------------
+     */
+
+    const signup =
+      document.getElementById("signup");
+
+    const profile =
+      document.getElementById("profile");
+
+    const verification =
+      document.getElementById("verification");
+
+
+    const nameInput =
+      document.getElementById("name");
+
+    const emailInput =
+      document.getElementById("email");
+
+    const birthdayInput =
+      document.getElementById("birthday");
+
+    const roleInput =
+      document.getElementById("role");
+
+
+    const verificationEmail =
+      document.getElementById("verificationEmail");
+
+
+
+    /*
+     * ----------------------------
+     * SIGNUP FORM
+     * ----------------------------
+     */
+
+    signup.addEventListener("submit", function(event) {
+
+      // Prevent browser from refreshing
+      event.preventDefault();
+
+
+      // Read current values from HTML inputs
+      const name = nameInput.value;
+      const email = emailInput.value;
+      const birthday = birthdayInput.value;
+      const role = roleInput.value;
+
+
+      /*
+       * Create one object representing
+       * the current user.
+       */
+
+      const user = {
+        name,
+        email,
+        birthday,
+        role
+      };
+
+
+      /*
+       * Save the user for other pages.
+       *
+       * sessionStorage can only store
+       * strings, so JSON.stringify()
+       * converts the object into a string.
+       */
+
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+
+
+      /*
+       * Dynamically display the email
+       * they actually entered.
+       */
+
+      verificationEmail.textContent = email;
+
+
+      /*
+       * Hide signup screen.
+       */
+
+      profile.style.display = "none";
+
+
+      /*
+       * Show verification screen.
+       */
+
+      verification.style.display = "block";
+
+    });
+
+
+
+    /*
+     * ----------------------------
+     * VERIFY CODE
+     * ----------------------------
+     */
+
+    function verify() {
+
+      const code =
+        document.getElementById("code");
+
+      const message =
+        document.getElementById("message");
+
+
+      if (code.value === "246810") {
+
+        message.textContent =
+          "Verified. Loading market access…";
+
+
+        /*
+         * Store verification state.
+         */
+
+        sessionStorage.setItem(
+          "verified",
+          "yes"
+        );
+
+
+        /*
+         * Move to markets page.
+         */
+
+        setTimeout(function() {
+
+          location.href = "markets.html";
+
+        }, 500);
+
+      }
+
+      else {
+
+        message.textContent =
+          "Use the test code 246810.";
+
+      }
+
+    }
+
   </script>
- </body>
+
+</body>
+
 </html>
