@@ -1,415 +1,2680 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Markets · Not An Insider</title>
-    <style>
-    :root{--ink:#13211d;--muted:#63736c;--line:#d5ddd7;--page:#f6f8f5;--panel:#fff;--soft:#eef3ee;--accent:#176b51;--accent-ink:#e9f9ed;--warning:#a85f10;--display:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:light}
-    html[data-theme="dark"]{--ink:#eff5f0;--muted:#9ba9a1;--line:#314039;--page:#101714;--panel:#17201b;--soft:#1d2922;--accent:#7dd69c;--accent-ink:#102319;--warning:#efb35b;color-scheme:dark}
-    *{box-sizing:border-box}
-    body{background:var(--page);color:var(--ink);font:15px/1.5 var(--sans);margin:0;transition:background .2s,color .2s}
-    a{color:inherit;text-decoration:none}
-    .shell{margin:auto;max-width:1160px;padding:22px 30px}
-    .top{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding-bottom:18px}
-    .brand{color:var(--accent);font-size:16px;font-weight:800;letter-spacing:-.055em}
-    .brand-mark{display:inline-block;margin-right:7px;transform:rotate(-25deg)}
-    .nav{align-items:center;display:flex;gap:20px}
-    .nav a{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.02em}
-    .nav a:hover,.nav a.active{color:var(--accent)}
-    .theme{background:var(--soft);border:1px solid var(--line);border-radius:99px;color:var(--ink);cursor:pointer;font-size:12px;padding:6px 9px}
-    .eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-    .display{font-family:var(--display);font-weight:400;letter-spacing:-.055em;line-height:.98}
-    .button{background:var(--accent);border:1px solid var(--accent);color:var(--accent-ink);display:inline-block;font-size:13px;font-weight:800;padding:11px 15px}
-    .button:hover{background:transparent;color:var(--accent)}
-    .card{background:var(--panel);border:1px solid var(--line)}
-    .muted{color:var(--muted)}
-    .notice{background:var(--soft);border-left:3px solid var(--accent);padding:15px 17px}
-    .footer{border-top:1px solid var(--line);color:var(--muted);font-size:11px;margin-top:35px;padding:18px 0}
-    @media(max-width:650px){.shell{padding:18px}
-    .nav{gap:11px}
-    .nav a{font-size:11px}
-    .top{align-items:flex-start}
-    .theme{margin-top:-4px}
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Markets · Not An Insider</title>
+
+  <style>
+    :root {
+      --ink:#13211d;
+      --muted:#63736c;
+      --line:#d5ddd7;
+      --page:#f6f8f5;
+      --panel:#fff;
+      --soft:#eef3ee;
+      --accent:#176b51;
+      --accent-ink:#e9f9ed;
+      --warning:#a85f10;
+      --display:Iowan Old Style,Palatino Linotype,Book Antiqua,Georgia,serif;
+      --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color-scheme:light;
     }
-  </style>
-    <style>
-    .notice{margin:24px 0}
-    .workspace{display:grid;grid-template-columns:210px minmax(0,1fr);gap:20px}
-    .side{height:max-content;padding:18px}
-    .score{color:var(--accent);font:48px var(--display);margin:7px 0}
-    .agent{border-top:1px solid var(--line);font-size:12px;padding:10px 0}
-    .agent b{display:block}
-    .board-head{align-items:end;display:flex;justify-content:space-between;margin:4px 0 14px}
-    .board-head h1{font-size:52px;margin:0}
-    .market{align-items:center;cursor:pointer;display:grid;gap:14px;grid-template-columns:1.8fr .55fr .55fr .55fr;margin-bottom:10px;padding:19px;transition:border-color .15s,transform .15s}
-    .market:hover{border-color:var(--accent);transform:translateY(-1px)}
-    .market h2{font-size:16px;line-height:1.35;margin:6px 0}
-    .market .label{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-    .quote{font:23px var(--display)}
-    .change{color:var(--accent);font-size:12px;font-weight:700}
-    .lock{color:var(--warning);font-size:12px;font-weight:700}
-    .ticket{background:var(--panel);border:1px solid var(--accent);box-shadow:0 20px 50px #0002;display:none;left:50%;max-width:580px;padding:26px;position:fixed;top:50%;transform:translate(-50%,-50%);width:calc(100% - 35px);z-index:5}
-    .ticket.show{display:block}
-    #proposal-form label, #proposal-report label {display:block;margin:14px 0 5px;font-weight:700}
-    #proposal-form input, #proposal-form textarea, #proposal-reason {width:100%;padding:12px;background:var(--page);color:var(--ink);border:1px solid var(--line);font:inherit}
-    #proposal-form button, #proposal-report button {margin:16px 8px 0 0;cursor:pointer}
-    .ticket { max-width: 690px; }
-    .payout-summary { margin: 20px 0; }
-    .payout-hero { background: var(--soft); border: 1px solid var(--accent); border-radius: 14px; padding: 24px; }
-    .payout-label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
-    .payout-total { display: block; color: var(--accent); font: 750 clamp(36px, 8vw, 58px)/1.2 var(--sans); letter-spacing: -.04em; font-variant-numeric: tabular-nums; margin: 8px 0; }
-    .payout-profit { color: var(--accent); font-size: 18px; font-weight: 750; }
-    .payout-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
-    .payout-cell { border: 1px solid var(--line); border-radius: 10px; padding: 15px; }
-    .payout-value { display: block; font-size: clamp(22px, 5vw, 30px); font-weight: 750; font-variant-numeric: tabular-nums; margin-top: 5px; }
-    .payout-risk { color: var(--warning); }
-    .payout-footnote { color: var(--muted); font-size: 12px; margin: 10px 0; }
-    .access-explainer { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 18px 0; font-size: 13px; }
-    .access-explainer summary { cursor: pointer; font-weight: 750; }
-    .access-explainer p { color: var(--muted); line-height: 1.6; }
-    .ticket h2{font-size:25px;line-height:1.25;margin:8px 0 18px}
-    .close{background:none;border:0;color:var(--muted);cursor:pointer;float:right;font-size:18px}
-    .choices{display:grid;gap:8px;grid-template-columns:1fr 1fr}
-    .choice{background:var(--soft);border:1px solid var(--line);color:var(--ink);cursor:pointer;font:inherit;font-weight:800;padding:12px}
-    .choice.selected{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-    .ticket input{background:var(--page);border:1px solid var(--line);color:var(--ink);font:inherit;margin:14px 0;padding:11px;width:100%}
-    .detail{background:var(--soft);font-size:12px;line-height:1.5;margin:12px 0;padding:13px}
-    .clearance{border-left:3px solid var(--accent);font-size:12px;padding-left:10px}
-    .blocked{border-left-color:var(--warning)}
-    .ticket .button{cursor:pointer;width:100%}
-    .overlay{background:#10171466;display:none;inset:0;position:fixed;z-index:4}
-    .overlay.show{display:block}
-    @media(max-width:760px){.workspace{grid-template-columns:1fr}
-    .market{grid-template-columns:1fr 1fr}
-    .market h2{grid-column:1/-1}
-    .board-head{display:block}
-    .side{display:none}
+
+    html[data-theme="dark"] {
+      --ink:#eff5f0;
+      --muted:#9ba9a1;
+      --line:#314039;
+      --page:#101714;
+      --panel:#17201b;
+      --soft:#1d2922;
+      --accent:#7dd69c;
+      --accent-ink:#102319;
+      --warning:#efb35b;
+      color-scheme:dark;
     }
+
+    * { box-sizing:border-box }
+
+    body {
+      background:var(--page);
+      color:var(--ink);
+      font:15px/1.5 var(--sans);
+      margin:0;
+      transition:background .2s,color .2s;
+    }
+
+    a {
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .shell {
+      margin:auto;
+      max-width:1160px;
+      padding:22px 30px;
+    }
+
+    .top {
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      padding-bottom:18px;
+    }
+
+    .brand {
+      color:var(--accent);
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:-.055em;
+    }
+
+    .brand-mark {
+      display:inline-block;
+      margin-right:7px;
+      transform:rotate(-25deg);
+    }
+
+    .nav {
+      align-items:center;
+      display:flex;
+      gap:20px;
+    }
+
+    .nav a {
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color:var(--accent);
+    }
+
+    .theme {
+      background:var(--soft);
+      border:1px solid var(--line);
+      border-radius:99px;
+      color:var(--ink);
+      cursor:pointer;
+      font-size:12px;
+      padding:6px 9px;
+    }
+
+    .eyebrow {
+      color:var(--accent);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+    }
+
+    .display {
+      font-family:var(--display);
+      font-weight:400;
+      letter-spacing:-.055em;
+      line-height:.98;
+    }
+
+    .button {
+      background:var(--accent);
+      border:1px solid var(--accent);
+      color:var(--accent-ink);
+      display:inline-block;
+      font-size:13px;
+      font-weight:800;
+      padding:11px 15px;
+    }
+
+    .button:hover {
+      background:transparent;
+      color:var(--accent);
+    }
+
+    .card {
+      background:var(--panel);
+      border:1px solid var(--line);
+    }
+
+    .muted {
+      color:var(--muted);
+    }
+
+    .notice {
+      background:var(--soft);
+      border-left:3px solid var(--accent);
+      padding:15px 17px;
+      margin:24px 0;
+    }
+
+    .footer {
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:11px;
+      margin-top:35px;
+      padding:18px 0;
+    }
+
+    .workspace {
+      display:grid;
+      grid-template-columns:210px minmax(0,1fr);
+      gap:20px;
+    }
+
+    .side {
+      height:max-content;
+      padding:18px;
+    }
+
+    .score {
+      color:var(--accent);
+      font:48px var(--display);
+      margin:7px 0;
+    }
+
+    .agent {
+      border-top:1px solid var(--line);
+      font-size:12px;
+      padding:10px 0;
+    }
+
+    .agent b {
+      display:block;
+    }
+
+    .board-head {
+      align-items:end;
+      display:flex;
+      justify-content:space-between;
+      margin:4px 0 14px;
+    }
+
+    .board-head h1 {
+      font-size:52px;
+      margin:0;
+    }
+
+    .market {
+      align-items:center;
+      cursor:pointer;
+      display:grid;
+      gap:14px;
+      grid-template-columns:1.8fr .55fr .55fr .55fr;
+      margin-bottom:10px;
+      padding:19px;
+      transition:border-color .15s,transform .15s;
+    }
+
+    .market:hover {
+      border-color:var(--accent);
+      transform:translateY(-1px);
+    }
+
+    .market h2 {
+      font-size:16px;
+      line-height:1.35;
+      margin:6px 0;
+    }
+
+    .market .label {
+      color:var(--muted);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .quote {
+      font:23px var(--display);
+    }
+
+    .change {
+      color:var(--accent);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .lock {
+      color:var(--warning);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .ticket {
+      background:var(--panel);
+      border:1px solid var(--accent);
+      box-shadow:0 20px 50px #0002;
+      display:none;
+      left:50%;
+      max-width:690px;
+      padding:26px;
+      position:fixed;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:calc(100% - 35px);
+      z-index:5;
+    }
+
+    .ticket.show {
+      display:block;
+    }
+
+    #proposal-form label,
+    #proposal-report label {
+      display:block;
+      margin:14px 0 5px;
+      font-weight:700;
+    }
+
+    #proposal-form input,
+    #proposal-form textarea,
+    #proposal-reason {
+      width:100%;
+      padding:12px;
+      background:var(--page);
+      color:var(--ink);
+      border:1px solid var(--line);
+      font:inherit;
+    }
+
+    #proposal-form button,
+    #proposal-report button {
+      margin:16px 8px 0 0;
+      cursor:pointer;
+    }
+
+    .payout-summary {
+      margin:20px 0;
+    }
+
+    .payout-hero {
+      background:var(--soft);
+      border:1px solid var(--accent);
+      border-radius:14px;
+      padding:24px;
+    }
+
+    .payout-label {
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .payout-total {
+      display:block;
+      color:var(--accent);
+      font:750 clamp(36px,8vw,58px)/1.2 var(--sans);
+      letter-spacing:-.04em;
+      font-variant-numeric:tabular-nums;
+      margin:8px 0;
+    }
+
+    .payout-profit {
+      color:var(--accent);
+      font-size:18px;
+      font-weight:750;
+    }
+
+    .payout-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .payout-cell {
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:15px;
+    }
+
+    .payout-value {
+      display:block;
+      font-size:clamp(22px,5vw,30px);
+      font-weight:750;
+      font-variant-numeric:tabular-nums;
+      margin-top:5px;
+    }
+
+    .payout-risk {
+      color:var(--warning);
+    }
+
+    .payout-footnote {
+      color:var(--muted);
+      font-size:12px;
+      margin:10px 0;
+    }
+
+    .access-explainer {
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:16px;
+      margin:18px 0;
+      font-size:13px;
+    }
+
+    .access-explainer summary {
+      cursor:pointer;
+      font-weight:750;
+    }
+
+    .access-explainer p {
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .ticket h2 {
+      font-size:25px;
+      line-height:1.25;
+      margin:8px 0 18px;
+    }
+
+    .close {
+      background:none;
+      border:0;
+      color:var(--muted);
+      cursor:pointer;
+      float:right;
+      font-size:18px;
+    }
+
+    .choices {
+      display:grid;
+      gap:8px;
+      grid-template-columns:1fr 1fr;
+    }
+
+    .choice {
+      background:var(--soft);
+      border:1px solid var(--line);
+      color:var(--ink);
+      cursor:pointer;
+      font:inherit;
+      font-weight:800;
+      padding:12px;
+    }
+
+    .choice.selected {
+      background:var(--accent);
+      border-color:var(--accent);
+      color:var(--accent-ink);
+    }
+
+    .ticket input {
+      background:var(--page);
+      border:1px solid var(--line);
+      color:var(--ink);
+      font:inherit;
+      margin:14px 0;
+      padding:11px;
+      width:100%;
+    }
+
+    .detail {
+      background:var(--soft);
+      font-size:12px;
+      line-height:1.5;
+      margin:12px 0;
+      padding:13px;
+    }
+
+    .clearance {
+      border-left:3px solid var(--accent);
+      font-size:12px;
+      padding-left:10px;
+    }
+
+    .blocked {
+      border-left-color:var(--warning);
+    }
+
+    .ticket .button {
+      cursor:pointer;
+      width:100%;
+    }
+
+    .overlay {
+      background:#10171466;
+      display:none;
+      inset:0;
+      position:fixed;
+      z-index:4;
+    }
+
+    .overlay.show {
+      display:block;
+    }
+
+    @media(max-width:760px) {
+      .workspace {
+        grid-template-columns:1fr;
+      }
+
+      .market {
+        grid-template-columns:1fr 1fr;
+      }
+
+      .market h2 {
+        grid-column:1/-1;
+      }
+
+      .board-head {
+        display:block;
+      }
+
+      .side {
+        display:none;
+      }
+    }
+
+    @media(max-width:650px) {
+      .shell {
+        padding:18px;
+      }
+
+      .nav {
+        gap:11px;
+      }
+
+      .nav a {
+        font-size:11px;
+      }
+
+      .top {
+        align-items:flex-start;
+      }
+
+      .theme {
+        margin-top:-4px;
+      }
+    }
+/* ============================================================
+   MARKET PROPOSAL
+   ============================================================ */
+
+.proposal-panel {
+  background:var(--panel);
+  border:1px solid var(--line);
+  max-width:620px;
+  padding:30px;
+  width:100%;
+}
+
+
+/* HEADER */
+
+.proposal-heading {
+  border-bottom:1px solid var(--line);
+  margin-bottom:27px;
+  padding-bottom:23px;
+}
+
+.proposal-heading h2 {
+  font-size:42px;
+  margin:7px 0 10px;
+}
+
+.proposal-intro {
+  font-size:13px;
+  line-height:1.65;
+  margin:0;
+  max-width:520px;
+}
+
+
+/* FIELDS */
+
+.proposal-field {
+  margin-bottom:24px;
+}
+
+.proposal-field label {
+  display:block;
+}
+
+.proposal-label {
+  color:var(--ink);
+  display:block;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.08em;
+  margin-bottom:3px;
+  text-transform:uppercase;
+}
+
+.proposal-hint {
+  color:var(--muted);
+  display:block;
+  font-size:10px;
+  line-height:1.5;
+  margin:0 0 9px;
+}
+
+
+/* INPUTS */
+
+.proposal-field input,
+.proposal-field select,
+.proposal-field textarea {
+  background:var(--page);
+  border:1px solid var(--line);
+  border-radius:0;
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:13px;
+  outline:none;
+  padding:12px 13px;
+  transition:
+    border-color .15s,
+    background .15s;
+  width:100%;
+}
+
+
+.proposal-field textarea {
+  line-height:1.55;
+  min-height:105px;
+  resize:vertical;
+}
+
+
+.proposal-field input:hover,
+.proposal-field select:hover,
+.proposal-field textarea:hover {
+  border-color:var(--muted);
+}
+
+
+.proposal-field input:focus,
+.proposal-field select:focus,
+.proposal-field textarea:focus {
+  background:var(--panel);
+  border-color:var(--accent);
+}
+
+
+.proposal-field input::placeholder,
+.proposal-field textarea::placeholder {
+  color:var(--muted);
+  opacity:.65;
+}
+
+
+/* REVIEW INFORMATION */
+
+.proposal-review {
+  background:var(--soft);
+  border-left:3px solid var(--accent);
+  margin:30px 0 22px;
+  padding:15px 17px;
+}
+
+.proposal-review p {
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.6;
+  margin:6px 0 0;
+}
+
+
+/* BUTTON AREA */
+
+.proposal-actions {
+  align-items:center;
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:flex-end;
+  gap:9px;
+  margin-top:28px;
+  padding-top:20px;
+}
+
+
+.proposal-submit {
+  cursor:pointer;
+  font-family:var(--sans);
+}
+
+
+.proposal-cancel {
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--muted);
+  cursor:pointer;
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:700;
+  padding:11px 15px;
+}
+
+
+.proposal-cancel:hover {
+  border-color:var(--ink);
+  color:var(--ink);
+}
+
+
+/* SUBMISSION MESSAGE */
+
+.proposal-result {
+  color:var(--accent);
+  font-size:11px;
+  font-weight:700;
+  margin:15px 0 0;
+  min-height:16px;
+}
+
+
+/* MOBILE */
+
+@media(max-width:650px) {
+
+  .proposal-panel {
+    padding:22px;
+  }
+
+  .proposal-heading h2 {
+    font-size:35px;
+  }
+
+  .proposal-actions {
+    align-items:stretch;
+    flex-direction:column-reverse;
+  }
+
+  .proposal-actions button {
+    width:100%;
+  }
+
+}
   </style>
-    <link rel="stylesheet" href="motion.css">
-  </head>
-  <body>
-    <div class="shell">
-      <header class="top">
-        <a class="brand" href="index.html">
-        <span class="brand-mark">◆</span>not an insider</a>
-        <nav class="nav">
-          <a class="active" href="markets.html">Markets</a>
-          <a href="profile.html">Profile</a>
-          <a href="api-docs.html">API</a>
-          <button class="theme" onclick="toggleTheme()">◐</button>
-        </nav>
-      </header>
-      <section class="notice">
-        <b>Demo account · Maya Chen</b>
-        <br>
-        <span class="muted">Government employee · politics and government-policy markets are restricted for this profile.</span>
-      </section>
-      <div class="workspace">
-        <aside class="side card">
-          <span class="eyebrow">Market access</span>
-          <div class="score">100<small style="font-size:14px">/100</small>
-          </div>
-          <b>Good standing</b>
-          <p class="muted" style="font-size:12px">Standing is an explainable record of platform-policy outcomes—not a behavioral credit score.</p>
-          <div class="agent">
-            <b>ANS identity</b>Integration pending</div>
-            <div class="agent">
-              <b>Affiliation</b>Government employee</div>
-              <div class="agent">
-                <b>Clearance</b>Required per trade</div>
-                <div class="agent">
-                  <b>Audit</b>Latest local review</div>
-                </aside>
-                <main>
-                  <div class="board-head">
-                    <div>
-                      <span class="eyebrow">Demo market board</span>
-                      <h1 class="display">Markets</h1>
-                    </div>
-                    <span class="muted" style="font-size:12px" id="odds-age">Pulling live Polymarket odds...</span>
-                  </div>
-                  <section id="list">
-                  </section>
-                </main>
-              </div>
-              <section class="card" style="padding:24px;margin-top:32px" aria-labelledby="propose-title">
-  <h2 id="propose-title">Propose a market</h2>
-  <p>Propose → AI evidence review → Team approval or denial → Publish</p>
-  <p class="muted">Local preview. AI research and authenticated reviewer access are awaiting integration.</p>
-  <form id="proposal-form">
-    <label for="proposal-question">Yes / No question</label>
-    <input id="proposal-question" required maxlength="240">
-    <label for="proposal-date">Closing date and time (local timezone)</label>
-    <input id="proposal-date" type="datetime-local" required>
-    <label for="proposal-rules">Resolution rules, cancellations and disputes</label>
-    <textarea id="proposal-rules" required maxlength="3000"></textarea>
-    <label for="proposal-source">Primary source URL</label>
-    <input id="proposal-source" type="url" required placeholder="https://...">
-    <label for="proposal-risk">Known affiliations and manipulation risks</label>
-    <textarea id="proposal-risk" required maxlength="2000"></textarea>
-    <button class="button" type="submit">Preview review summary →</button>
-  </form>
-  <section id="proposal-report" hidden aria-live="polite">
-    <h3>Research brief for the team</h3>
-    <pre id="proposal-summary" style="white-space:pre-wrap;font:inherit"></pre>
-    <p><strong>Evidence unverified.</strong> This preview packages your submission; no web research has run.</p>
-    <p>AI review will collect dated citations, conflicting evidence, resolution ambiguity, manipulation risks and affiliation restrictions, then recommend a decision to the team.</p>
-    <label for="proposal-reason">Reviewer reasoning</label>
-    <textarea id="proposal-reason" maxlength="2000"></textarea>
-    <button class="button" onclick="decideProposal('Approved')">Simulate approval</button>
-    <button class="button" onclick="decideProposal('Denied')">Simulate denial</button>
-    <p id="proposal-status" role="status"></p>
+</head>
+
+<body>
+
+<div class="shell">
+
+  <header class="top">
+
+    <a class="brand" href="index.html">
+      <span class="brand-mark">◆</span>
+      not an insider
+    </a>
+
+    <nav class="nav">
+      <a class="active" href="markets.html">Markets</a>
+      <a href="profile.html">Profile</a>
+      <a href="api-docs.html">API</a>
+      <button class="theme" onclick="toggleTheme()">◐</button>
+    </nav>
+
+  </header>
+
+
+  <!-- DYNAMIC USER BANNER -->
+
+  <section class="notice">
+
+    <b>
+      Demo account ·
+      <span id="account-name"></span>
+    </b>
+
+    <br>
+
+    <span class="muted" id="account-description"></span>
+
   </section>
-</section>
-<footer class="footer">All prices and yields below are illustrative. This static prototype does not submit or settle trades.</footer>
-            </div>
-            <div class="overlay" id="overlay" onclick="closeTicket()">
-            </div>
-            <section class="ticket" id="ticket" role="dialog" aria-modal="true" aria-labelledby="title" style="max-height:90vh;overflow:auto">
-              <button class="close" aria-label="Close trade review" onclick="closeTicket()">×</button>
-              <span class="eyebrow" id="category">
-            </span>
-            <h2 id="title">
-          </h2>
-          <div class="choices">
-            <button class="choice selected" id="yes" onclick="selectSide('yes')">Yes <span id="yesq">
-          </span>
-        </button>
-        <button class="choice" id="no" onclick="selectSide('no')">No <span id="noq">
+
+
+  <div class="workspace">
+
+    <aside class="side card">
+
+      <span class="eyebrow">
+        Market access
       </span>
+
+      <div class="score">
+        100
+        <small style="font-size:14px">/100</small>
+      </div>
+
+      <b>Good standing</b>
+
+      <p class="muted" style="font-size:12px">
+        Standing is an explainable record of platform-policy outcomes—not a behavioral credit score.
+      </p>
+
+
+      <div class="agent">
+        <b>ANS identity</b>
+        Integration pending
+      </div>
+
+      <div class="agent">
+        <b>Account</b>
+        <span id="sidebar-name"></span>
+      </div>
+
+      <div class="agent">
+        <b>Affiliation</b>
+        <span id="sidebar-role"></span>
+      </div>
+
+      <div class="agent">
+        <b>Clearance</b>
+        Required per trade
+      </div>
+
+      <div class="agent">
+        <b>Audit</b>
+        Latest local review
+      </div>
+
+    </aside>
+
+
+    <main>
+
+      <div class="board-head">
+
+        <div>
+          <span class="eyebrow">
+            Demo market board
+          </span>
+
+          <h1 class="display">
+            Markets
+          </h1>
+        </div>
+
+        <span
+          class="muted"
+          style="font-size:12px"
+          id="odds-age"
+        >
+          Pulling live Polymarket odds...
+        </span>
+
+      </div>
+
+      <section id="list"></section>
+
+    </main>
+
+  </div>
+
+
+  <!-- MARKET PROPOSAL -->
+   
+
+  <section
+    class="card"
+    style="padding:24px;margin-top:32px"
+    aria-labelledby="propose-title"
+  >
+
+    <h2 id="propose-title">
+      Propose a market
+    </h2>
+
+    <p>
+      Propose → AI evidence review → Team approval or denial → Publish
+    </p>
+
+    <p class="muted">
+      Local preview. AI research and authenticated reviewer access are awaiting integration.
+    </p>
+
+
+    <form id="proposal-form">
+
+      <label for="proposal-question">
+        Yes / No question
+      </label>
+
+      <input
+        id="proposal-question"
+        required
+        maxlength="240"
+      >
+
+
+      <label for="proposal-date">
+        Closing date and time (local timezone)
+      </label>
+
+      <input
+        id="proposal-date"
+        type="datetime-local"
+        required
+      >
+
+
+      <label for="proposal-rules">
+        Resolution rules, cancellations and disputes
+      </label>
+
+      <textarea
+        id="proposal-rules"
+        required
+        maxlength="3000"
+      ></textarea>
+
+
+      <label for="proposal-source">
+        Primary source URL
+      </label>
+
+      <input
+        id="proposal-source"
+        type="url"
+        required
+        placeholder="https://..."
+      >
+
+
+      <label for="proposal-risk">
+        Known affiliations and manipulation risks
+      </label>
+
+      <textarea
+        id="proposal-risk"
+        required
+        maxlength="2000"
+      ></textarea>
+
+
+      <button
+        class="button"
+        type="submit"
+      >
+        Preview review summary →
+      </button>
+
+    </form>
+
+
+    <section
+      id="proposal-report"
+      hidden
+      aria-live="polite"
+    >
+
+      <h3>
+        Research brief for the team
+      </h3>
+
+      <pre
+        id="proposal-summary"
+        style="white-space:pre-wrap;font:inherit"
+      ></pre>
+
+      <p>
+        <strong>Evidence unverified.</strong>
+        This preview packages your submission; no web research has run.
+      </p>
+
+      <p>
+        AI review will collect dated citations, conflicting evidence,
+        resolution ambiguity, manipulation risks and affiliation restrictions,
+        then recommend a decision to the team.
+      </p>
+
+
+      <label for="proposal-reason">
+        Reviewer reasoning
+      </label>
+
+      <textarea
+        id="proposal-reason"
+        maxlength="2000"
+      ></textarea>
+
+
+      <button
+        class="button"
+        onclick="decideProposal('Approved')"
+      >
+        Simulate approval
+      </button>
+
+      <button
+        class="button"
+        onclick="decideProposal('Denied')"
+      >
+        Simulate denial
+      </button>
+
+      <p
+        id="proposal-status"
+        role="status"
+      ></p>
+
+    </section>
+
+  </section>
+
+
+  <footer class="footer">
+    All prices and yields below are illustrative.
+    This static prototype does not submit or settle trades.
+  </footer>
+
+</div>
+
+
+
+<!-- OVERLAY -->
+
+<div
+  class="overlay"
+  id="overlay"
+  onclick="closeTicket()"
+></div>
+
+
+
+<!-- TRADE TICKET -->
+
+<section
+  class="ticket"
+  id="ticket"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="title"
+  style="max-height:90vh;overflow:auto"
+>
+
+  <button
+    class="close"
+    aria-label="Close trade review"
+    onclick="closeTicket()"
+  >
+    ×
+  </button>
+
+
+  <span
+    class="eyebrow"
+    id="category"
+  ></span>
+
+
+  <h2 id="title"></h2>
+
+
+  <div class="choices">
+
+    <button
+      class="choice selected"
+      id="yes"
+      onclick="selectSide('yes')"
+    >
+      Yes
+      <span id="yesq"></span>
     </button>
+
+    <button
+      class="choice"
+      id="no"
+      onclick="selectSide('no')"
+    >
+      No
+      <span id="noq"></span>
+    </button>
+
   </div>
-  <label for="amount" class="eyebrow" style="display:block;margin-top:18px">Test amount</label>
-  <input id="amount" type="number" min="0.01" max="10000" step="0.01" value="25" oninput="updateYield()">
-  <div class="payout-summary" id="yield" role="status" aria-live="polite" aria-atomic="true">
-  </div>
-  <details class="access-explainer" open>
-    <summary>Your access score: 100 / 100 · Good standing</summary>
-    <p>Your score describes your platform standing. The planned premium-market policy will require a minimum score, shown on each eligible market. Thresholds and score deductions are still to be configured; this demo keeps Maya at 100.</p>
-    <p><strong>Affiliation checks apply at every score.</strong> Maya's government role blocks the politics and government-policy markets even at 100. An ordinary blocked review does not reduce her score or ban her account.</p>
-    <p>The score does not change contract prices, potential payouts, or the chance of winning. Final access also requires identity reconfirmation and the market-specific clearance check below.</p>
+
+
+  <label
+    for="amount"
+    class="eyebrow"
+    style="display:block;margin-top:18px"
+  >
+    Test amount
+  </label>
+
+  <input
+    id="amount"
+    type="number"
+    min="1"
+    value="25"
+    oninput="updateYield()"
+  >
+
+
+  <div
+    class="payout-summary"
+    id="yield"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <details
+    class="access-explainer"
+    open
+  >
+
+    <summary>
+      Your access score: 100 / 100 · Good standing
+    </summary>
+
+    <p>
+      Your score describes your platform standing.
+      The planned premium-market policy will require a minimum score,
+      shown on each eligible market.
+      Thresholds and score deductions are still to be configured;
+      this demo keeps <span class="dynamic-name"></span> at 100.
+    </p>
+
+    <p>
+      <strong>Affiliation checks apply at every score.</strong>
+      Market access is checked against
+      <span class="dynamic-name"></span>'s declared role:
+      <strong id="dynamic-role"></strong>.
+      An ordinary blocked review does not reduce the score or ban the account.
+    </p>
+
+    <p>
+      The score does not change contract prices,
+      potential payouts, or the chance of winning.
+      Final access also requires identity reconfirmation
+      and the market-specific clearance check below.
+    </p>
+
   </details>
-  <div class="detail" id="info">
-  </div>
-  <p class="muted">Reconfirm the demo account: maya.chen@demo.example · code 246810</p>
-  <label for="review-email">Account email</label>
-  <input id="review-email" type="email" autocomplete="off">
-  <label for="review-code">Demo verification code</label>
-  <input id="review-code" inputmode="numeric" maxlength="6" autocomplete="off">
-  <div class="clearance" id="clearance" role="status" aria-live="polite">
-  </div>
-  <button class="button" id="continue" onclick="clearTrade()" style="margin-top:18px">Reconfirm identity &amp; continue →</button>
+
+
+  <div
+    class="detail"
+    id="info"
+  ></div>
+
+
+  <p class="muted">
+    Reconfirm the demo account:
+    <strong id="reconfirm-email"></strong>
+    · code 246810
+  </p>
+
+
+  <label for="review-email">
+    Account email
+  </label>
+
+  <input
+    id="review-email"
+    type="email"
+    autocomplete="off"
+  >
+
+
+  <label for="review-code">
+    Demo verification code
+  </label>
+
+  <input
+    id="review-code"
+    inputmode="numeric"
+    maxlength="6"
+    autocomplete="off"
+  >
+
+
+  <div
+    class="clearance"
+    id="clearance"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+
+  <button
+    class="button"
+    id="continue"
+    onclick="clearTrade()"
+    style="margin-top:18px"
+  >
+    Reconfirm identity & continue →
+  </button>
+
 </section>
+
+
+
 <script>
 
 "use strict";
-const get = id => document.getElementById(id);
-const markets = [
-  { category: "SPORTS", title: "Next Virginia Tech game", yes: 57, restricted: false, auto: "vt0", liveOutcome: "Virginia Tech", info: "Live Polymarket odds for the nearest upcoming VT game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy." },
-  { category: "SPORTS", title: "Following Virginia Tech game", yes: 55, restricted: false, auto: "vt1", liveOutcome: "Virginia Tech", info: "Live Polymarket odds for the VT game after the next one. Shows a demo price until Polymarket posts that game. Players and athletics staff (vt-athletics) are restricted." },
-  { category: "POLITICS", title: "Will the Virginia abortion protection amendment pass?", yes: 90, restricted: true, slug: "will-the-virginia-abortion-protection-amendment-pass", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted - this is Maya's blocked market." },
-  { category: "POLITICS", title: "Will a new Virginia congressional map be used in the midterms?", yes: 4, restricted: true, slug: "new-virginia-congressional-map-used-in-the-midterms", liveOutcome: "Yes", info: "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted." },
-  { category: "AI", title: "Will the next Claude Opus model be released on September 21?", yes: 31, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-21-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." },
-  { category: "AI", title: "Will the next Claude Opus model be released on September 22?", yes: 30, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-22-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." },
-  { category: "AI", title: "Will the next Claude Opus model be released on September 23?", yes: 1, restricted: false, slug: "will-the-next-claude-opus-model-be-released-on-september-23-2026", liveOutcome: "Yes", info: "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted - they decide the release date." }
+
+
+/*
+ * ============================================================
+ * BASIC HELPERS
+ * ============================================================
+ */
+
+const get = id =>
+  document.getElementById(id);
+
+
+
+/*
+ * ============================================================
+ * LOAD CURRENT USER
+ * ============================================================
+ *
+ * signup/login.html stored:
+ *
+ * {
+ *   name,
+ *   email,
+ *   birthday,
+ *   role
+ * }
+ *
+ * inside sessionStorage.
+ */
+
+const storedUser =
+  sessionStorage.getItem("user");
+
+
+/*
+ * If there is no user OR they haven't verified,
+ * return to login.
+ */
+
+if (
+  !storedUser ||
+  sessionStorage.getItem("verified") !== "yes"
+) {
+
+  location.replace("login.html");
+
+}
+
+
+/*
+ * Convert stored JSON back into a JS object.
+ */
+
+const user =
+  JSON.parse(storedUser);
+
+
+
+/*
+ * ============================================================
+ * USER ROLE / ACCESS RULES
+ * ============================================================
+ */
+
+
+/*
+ * Roles considered government-related
+ * for this local prototype.
+ */
+
+const governmentRoles = [
+  "Government employee",
+  "Public official",
+  "Household member"
 ];
+
+
+function isGovernmentUser() {
+
+  return governmentRoles.includes(user.role);
+
+}
+
+
+
+/*
+ * ============================================================
+ * DISPLAY USER INFORMATION
+ * ============================================================
+ */
+
+
+get("account-name").textContent =
+  user.name;
+
+
+get("sidebar-name").textContent =
+  user.name;
+
+
+get("sidebar-role").textContent =
+  user.role;
+
+
+get("reconfirm-email").textContent =
+  user.email;
+
+
+get("dynamic-role").textContent =
+  user.role;
+
+
+/*
+ * Replace every element using dynamic-name.
+ */
+
+document
+  .querySelectorAll(".dynamic-name")
+  .forEach(element => {
+
+    element.textContent =
+      user.name;
+
+  });
+
+
+
+/*
+ * Dynamic banner description.
+ */
+
+if (isGovernmentUser()) {
+
+  get("account-description").textContent =
+    user.role +
+    " · politics and government-policy markets may be restricted for this profile.";
+
+}
+
+else {
+
+  get("account-description").textContent =
+    user.role +
+    " · market access is evaluated per trade.";
+
+}
+
+
+
+/*
+ * ============================================================
+ * MARKET DATA
+ * ============================================================
+ */
+
+
+const markets = [
+
+  {
+    category: "SPORTS",
+
+    title:
+      "Next Virginia Tech game",
+
+    yes: 57,
+
+    restriction:
+      null,
+
+    auto:
+      "vt0",
+
+    liveOutcome:
+      "Virginia Tech",
+
+    info:
+      "Live Polymarket odds for the nearest upcoming VT game. Players and athletics staff (vt-athletics) are restricted under this market's affiliation policy."
+  },
+
+
+  {
+    category: "SPORTS",
+
+    title:
+      "Following Virginia Tech game",
+
+    yes: 55,
+
+    restriction:
+      null,
+
+    auto:
+      "vt1",
+
+    liveOutcome:
+      "Virginia Tech",
+
+    info:
+      "Live Polymarket odds for the VT game after the next one. Shows a demo price until Polymarket posts that game. Players and athletics staff (vt-athletics) are restricted."
+  },
+
+
+  {
+    category: "POLITICS",
+
+    title:
+      "Will the Virginia abortion protection amendment pass?",
+
+    yes: 90,
+
+    restriction:
+      "government",
+
+    slug:
+      "will-the-virginia-abortion-protection-amendment-pass",
+
+    liveOutcome:
+      "Yes",
+
+    info:
+      "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted."
+  },
+
+
+  {
+    category: "POLITICS",
+
+    title:
+      "Will a new Virginia congressional map be used in the midterms?",
+
+    yes: 4,
+
+    restriction:
+      "government",
+
+    slug:
+      "new-virginia-congressional-map-used-in-the-midterms",
+
+    liveOutcome:
+      "Yes",
+
+    info:
+      "Live Polymarket odds. Government officials and household members (va-politician-household) are restricted."
+  },
+
+
+  {
+    category: "AI",
+
+    title:
+      "Will the next Claude Opus model be released on September 21?",
+
+    yes: 31,
+
+    restriction:
+      null,
+
+    slug:
+      "will-the-next-claude-opus-model-be-released-on-september-21-2026",
+
+    liveOutcome:
+      "Yes",
+
+    info:
+      "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted because they may influence the release date."
+  },
+
+
+  {
+    category: "AI",
+
+    title:
+      "Will the next Claude Opus model be released on September 22?",
+
+    yes: 30,
+
+    restriction:
+      null,
+
+    slug:
+      "will-the-next-claude-opus-model-be-released-on-september-22-2026",
+
+    liveOutcome:
+      "Yes",
+
+    info:
+      "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted because they may influence the release date."
+  },
+
+
+  {
+    category: "AI",
+
+    title:
+      "Will the next Claude Opus model be released on September 23?",
+
+    yes: 1,
+
+    restriction:
+      null,
+
+    slug:
+      "will-the-next-claude-opus-model-be-released-on-september-23-2026",
+
+    liveOutcome:
+      "Yes",
+
+    info:
+      "Live Polymarket odds. Anthropic staff (anthropic-staff) are restricted because they may influence the release date."
+  }
+
+];
+
+
+
+/*
+ * ============================================================
+ * CHECK WHETHER CURRENT USER IS BLOCKED
+ * ============================================================
+ */
+
+
+function userBlockedFromMarket(market) {
+
+  if (market.restriction === "government") {
+
+    return isGovernmentUser();
+
+  }
+
+
+  return false;
+
+}
+
+
+
+/*
+ * ============================================================
+ * STATE
+ * ============================================================
+ */
+
+
 let active = 0;
+
 let side = "yes";
+
 let previousFocus;
-let ticketPrice = 50;
-const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 let proposalDecided = false;
-get("proposal-form").addEventListener("submit", event => {
-  event.preventDefault();
-  const source = new URL(get("proposal-source").value);
-  if (!["https:", "http:"].includes(source.protocol)) {
-    get("proposal-source").setCustomValidity("Use an HTTP or HTTPS URL.");
-    get("proposal-source").reportValidity();
-    return;
-  }
-  if (new Date(get("proposal-date").value) <= new Date()) {
-    get("proposal-date").setCustomValidity("Choose a future closing time.");
-    get("proposal-date").reportValidity();
-    return;
-  }
-  proposalDecided = false;
-  get("proposal-summary").textContent = [
-    "Question: " + get("proposal-question").value,
-    "Closes (local time): " + get("proposal-date").value,
-    "Rules: " + get("proposal-rules").value,
-    "Submitted source (unchecked): " + source.href,
-    "Declared risks: " + get("proposal-risk").value
-  ].join("\n\n");
-  get("proposal-reason").value = "";
-  get("proposal-report").hidden = false;
-  get("proposal-status").textContent = "Awaiting evidence review and team decision. Demo controls below.";
-});
-for (const id of ["proposal-source", "proposal-date"]) {
-  get(id).addEventListener("input", () => get(id).setCustomValidity(""));
+
+
+
+/*
+ * ============================================================
+ * PROPOSAL FORM
+ * ============================================================
+ */
+
+
+get("proposal-form")
+  .addEventListener(
+    "submit",
+    event => {
+
+      event.preventDefault();
+
+
+      const source =
+        new URL(
+          get("proposal-source").value
+        );
+
+
+      if (
+        !["https:", "http:"]
+          .includes(source.protocol)
+      ) {
+
+        get("proposal-source")
+          .setCustomValidity(
+            "Use an HTTP or HTTPS URL."
+          );
+
+        get("proposal-source")
+          .reportValidity();
+
+        return;
+
+      }
+
+
+      if (
+        new Date(
+          get("proposal-date").value
+        ) <= new Date()
+      ) {
+
+        get("proposal-date")
+          .setCustomValidity(
+            "Choose a future closing time."
+          );
+
+        get("proposal-date")
+          .reportValidity();
+
+        return;
+
+      }
+
+
+      proposalDecided = false;
+
+
+      get("proposal-summary").textContent = [
+
+        "Question: " +
+          get("proposal-question").value,
+
+        "Closes (local time): " +
+          get("proposal-date").value,
+
+        "Rules: " +
+          get("proposal-rules").value,
+
+        "Submitted source (unchecked): " +
+          source.href,
+
+        "Declared risks: " +
+          get("proposal-risk").value
+
+      ].join("\n\n");
+
+
+      get("proposal-reason").value =
+        "";
+
+
+      get("proposal-report").hidden =
+        false;
+
+
+      get("proposal-status").textContent =
+        "Awaiting evidence review and team decision. Demo controls below.";
+
+    }
+  );
+
+
+
+for (
+  const id of [
+    "proposal-source",
+    "proposal-date"
+  ]
+) {
+
+  get(id)
+    .addEventListener(
+      "input",
+      () =>
+        get(id)
+          .setCustomValidity("")
+    );
+
 }
+
+
+
 function decideProposal(decision) {
-  if (proposalDecided) return;
-  const reason = get("proposal-reason").value.trim();
+
+  if (proposalDecided)
+    return;
+
+
+  const reason =
+    get("proposal-reason")
+      .value
+      .trim();
+
+
   if (!reason) {
-    get("proposal-status").textContent = "Add reviewer reasoning first.";
+
+    get("proposal-status").textContent =
+      "Add reviewer reasoning first.";
+
     return;
+
   }
+
+
   proposalDecided = true;
-  get("proposal-status").textContent = decision + " in simulation · " + reason +
+
+
+  get("proposal-status").textContent =
+    decision +
+    " in simulation · " +
+    reason +
     " · No market published. Production decisions require verified evidence and an authorized reviewer.";
+
 }
+
+
+
+/*
+ * ============================================================
+ * MARKET LIST
+ * ============================================================
+ */
+
+
 function renderList() {
-const focusedIndex = [...get("list").children].indexOf(document.activeElement);
-get("list").innerHTML = markets.map((m, i) => `
-  <button type="button" class="market card" onclick="openTicket(${i})" style="width:100%;text-align:left;color:var(--ink);font:inherit">
-    <span><span class="label">${m.category}${m.live ? " · LIVE ODDS" : " · DEMO ODDS"}</span><strong style="display:block;margin:8px 0">${escapeHtml(m.title)}</strong><span class="${m.restricted ? "lock" : "change"}">${m.restricted ? "Affiliation review required" : "Available for review"}</span></span>
-    <span><span class="label">Yes</span><span class="quote" style="display:block">${m.yes}¢</span></span>
-    <span><span class="label">No</span><span class="quote" style="display:block">${100 - m.yes}¢</span></span>
-    <span class="muted">Review →<small style="display:block;color:var(--warning)">◷ Evidence review pending</small></span>
-  </button>`).join("");
-if (focusedIndex >= 0) get("list").children[focusedIndex]?.focus({preventScroll:true});
+
+  get("list").innerHTML =
+    markets
+      .map((m, i) => {
+
+        const blocked =
+          userBlockedFromMarket(m);
+
+
+        return `
+          <button
+            type="button"
+            class="market card"
+            onclick="openTicket(${i})"
+            style="
+              width:100%;
+              text-align:left;
+              color:var(--ink);
+              font:inherit
+            "
+          >
+
+            <span>
+
+              <span class="label">
+                ${m.category}
+                ${m.live ? " · LIVE ODDS" : ""}
+              </span>
+
+              <strong
+                style="display:block;margin:8px 0"
+              >
+                ${m.title}
+              </strong>
+
+              <span
+                class="${blocked ? "lock" : "change"}"
+              >
+                ${
+                  blocked
+                    ? "Affiliation review required"
+                    : "Available for review"
+                }
+              </span>
+
+            </span>
+
+
+            <span>
+
+              <span class="label">
+                Yes
+              </span>
+
+              <span
+                class="quote"
+                style="display:block"
+              >
+                ${m.yes}¢
+              </span>
+
+            </span>
+
+
+            <span>
+
+              <span class="label">
+                No
+              </span>
+
+              <span
+                class="quote"
+                style="display:block"
+              >
+                ${100 - m.yes}¢
+              </span>
+
+            </span>
+
+
+            <span class="muted">
+
+              Review →
+
+              <small
+                style="
+                  display:block;
+                  color:var(--warning)
+                "
+              >
+                ◷ Evidence review pending
+              </small>
+
+            </span>
+
+          </button>
+        `;
+
+      })
+      .join("");
+
 }
+
+
 renderList();
+
+
+
+/*
+ * ============================================================
+ * OPEN TRADE TICKET
+ * ============================================================
+ */
+
+
 function openTicket(i) {
-  previousFocus = document.activeElement;
+
+  previousFocus =
+    document.activeElement;
+
+
   active = i;
+
   side = "yes";
-  const m = markets[i];
-  ticketPrice = m.yes;
-  get("category").textContent = m.category + " · SIMULATED TRADE";
-  get("title").textContent = m.title;
-  get("yesq").textContent = m.yes + "¢";
-  get("noq").textContent = (100 - m.yes) + "¢";
-  get("info").textContent = m.info + " Evidence review pending: this demo market has no verified source bundle. A ✓ Verified badge will require dated supporting sources, clear resolution rules and team approval. Verification cannot guarantee an outcome or eliminate manipulation risk.";
-  get("clearance").className = "clearance";
-  get("clearance").textContent = "Reconfirm Maya's demo email and code to check authorization for this market.";
-  get("review-email").value = "";
-  get("review-code").value = "";
-  get("continue").textContent = "Verify identity & check market access";
-  get("continue").disabled = false;
+
+
+  const m =
+    markets[i];
+
+
+  get("category").textContent =
+    m.category +
+    " · SIMULATED TRADE";
+
+
+  get("title").textContent =
+    m.title;
+
+
+  get("yesq").textContent =
+    m.yes + "¢";
+
+
+  get("noq").textContent =
+    (100 - m.yes) + "¢";
+
+
+  get("info").textContent =
+    m.info +
+    " Evidence review pending: this demo market has no verified source bundle. A ✓ Verified badge will require dated supporting sources, clear resolution rules and team approval. Verification cannot guarantee an outcome or eliminate manipulation risk.";
+
+
+  get("clearance").className =
+    "clearance";
+
+
+  get("clearance").textContent =
+    "Reconfirm " +
+    user.name +
+    "'s demo email and code to check authorization for this market.";
+
+
+  get("review-email").value =
+    "";
+
+
+  get("review-code").value =
+    "";
+
+
+  get("continue").textContent =
+    "Verify identity & check market access";
+
+
+  get("continue").disabled =
+    false;
+
+
   selectSide("yes");
-  get("ticket").classList.add("show");
-  get("overlay").classList.add("show");
-  document.body.classList.add("modal-open");
-  document.querySelector(".shell").inert = true;
-  get("ticket").scrollTop = 0;
-  get("ticket").querySelector(".close").focus();
+
+
+  get("ticket")
+    .classList
+    .add("show");
+
+
+  get("overlay")
+    .classList
+    .add("show");
+
+
+  get("ticket")
+    .querySelector(".close")
+    .focus();
+
 }
+
+
+
+/*
+ * ============================================================
+ * SELECT YES / NO
+ * ============================================================
+ */
+
+
 function selectSide(value) {
+
   side = value;
-  for (const s of ["yes", "no"]) {
-    get(s).className = "choice " + (s === side ? "selected" : "");
-    get(s).setAttribute("aria-pressed", String(s === side));
+
+
+  for (
+    const s of ["yes", "no"]
+  ) {
+
+    get(s).className =
+      "choice " +
+      (
+        s === side
+          ? "selected"
+          : ""
+      );
+
+
+    get(s)
+      .setAttribute(
+        "aria-pressed",
+        String(s === side)
+      );
+
   }
+
+
   updateYield();
+
 }
+
+
+
+/*
+ * ============================================================
+ * PAYOUT CALCULATOR
+ * ============================================================
+ */
+
+
 function updateYield() {
-  const rawCents = Number(get("amount").value) * 100;
-  const cents = Math.round(rawCents);
-  const price = side === "yes" ? ticketPrice : 100 - ticketPrice;
-  if (!Number.isFinite(cents) || Math.abs(rawCents-cents)>1e-8 || price <= 0 || price >= 100 || cents < price || cents > 1000000) {
-    get("yield").textContent = "Enter enough for one contract, up to $10,000.";
+
+  const cents =
+    Math.round(
+      Number(
+        get("amount").value
+      ) * 100
+    );
+
+
+  const price =
+    side === "yes"
+      ? markets[active].yes
+      : 100 - markets[active].yes;
+
+
+  if (
+    !Number.isFinite(cents) ||
+    cents < price ||
+    cents > 1000000
+  ) {
+
+    get("yield").textContent =
+      "Enter enough for one contract, up to $10,000.";
+
     return false;
+
   }
-  const contracts = Math.floor(cents / price);
-  const cost = contracts * price / 100;
-  const money = n => "$" + n.toFixed(2);
+
+
+  const contracts =
+    Math.floor(
+      cents / price
+    );
+
+
+  const cost =
+    contracts *
+    price /
+    100;
+
+
+  const money =
+    n =>
+      "$" +
+      n.toFixed(2);
+
+
   get("yield").innerHTML = `
+
     <div class="payout-hero">
-      <span class="payout-label">Total return if your prediction is correct</span>
-      <strong class="payout-total">${money(contracts)}</strong>
-      <span class="payout-profit">+${money(contracts - cost)} potential net profit</span>
-      <p class="payout-footnote">Return includes your original stake. Profit shown before fees.</p>
+
+      <span class="payout-label">
+        Total return if your prediction is correct
+      </span>
+
+      <strong class="payout-total">
+        ${money(contracts)}
+      </strong>
+
+      <span class="payout-profit">
+        +${money(contracts - cost)}
+        potential net profit
+      </span>
+
+      <p class="payout-footnote">
+        Return includes your original stake.
+        Profit shown before fees.
+      </p>
+
     </div>
+
+
     <div class="payout-grid">
-      <div class="payout-cell"><span class="payout-label">Your money in</span><strong class="payout-value">${money(cost)}</strong></div>
-      <div class="payout-cell"><span class="payout-label">Maximum loss if incorrect</span><strong class="payout-value payout-risk">${money(cost)}</strong></div>
-      <div class="payout-cell"><span class="payout-label">${side.toUpperCase()} contracts at ${price}¢</span><strong class="payout-value">${contracts.toLocaleString("en-US")}</strong></div>
-      <div class="payout-cell"><span class="payout-label">Unspent budget</span><strong class="payout-value">${money(cents / 100 - cost)}</strong></div>
+
+      <div class="payout-cell">
+
+        <span class="payout-label">
+          Your money in
+        </span>
+
+        <strong class="payout-value">
+          ${money(cost)}
+        </strong>
+
+      </div>
+
+
+      <div class="payout-cell">
+
+        <span class="payout-label">
+          Maximum loss if incorrect
+        </span>
+
+        <strong
+          class="payout-value payout-risk"
+        >
+          ${money(cost)}
+        </strong>
+
+      </div>
+
+
+      <div class="payout-cell">
+
+        <span class="payout-label">
+          ${side.toUpperCase()}
+          contracts at
+          ${price}¢
+        </span>
+
+        <strong class="payout-value">
+          ${
+            contracts
+              .toLocaleString("en-US")
+          }
+        </strong>
+
+      </div>
+
+
+      <div class="payout-cell">
+
+        <span class="payout-label">
+          Unspent budget
+        </span>
+
+        <strong class="payout-value">
+          ${
+            money(
+              cents / 100 -
+              cost
+            )
+          }
+        </strong>
+
+      </div>
+
     </div>
-    <p class="payout-footnote">Simulated fixed-price estimate · Whole contracts · Fees excluded · A correct outcome is not guaranteed.</p>`;
+
+
+    <p class="payout-footnote">
+      Simulated fixed-price estimate ·
+      Whole contracts ·
+      Fees excluded ·
+      A correct outcome is not guaranteed.
+    </p>
+
+  `;
+
+
   return true;
+
 }
+
+
+
+/*
+ * ============================================================
+ * VERIFY IDENTITY + CHECK MARKET ACCESS
+ * ============================================================
+ */
+
+
+
+
 function clearTrade() {
-  const result = get("clearance");
-  if (sessionStorage.getItem("mayaVerified") !== "yes") {
-    result.textContent = "Complete demo email verification on the login page first.";
+
+  const result =
+    get("clearance");
+
+
+  /*
+   * ============================================================
+   * CHECK INITIAL LOGIN VERIFICATION
+   * ============================================================
+   */
+
+  if (
+    sessionStorage.getItem("verified")
+      !== "yes"
+  ) {
+
+    result.textContent =
+      "Complete email verification on the login page first.";
+
     return;
+
   }
-  if (get("review-email").value.trim().toLowerCase() !== "maya.chen@demo.example" || get("review-code").value !== "246810") {
-    result.textContent = "Identity check failed. Use Maya's demo email and code 246810.";
+
+
+
+  /*
+   * ============================================================
+   * RECONFIRM EMAIL + CODE
+   * ============================================================
+   */
+
+  const enteredEmail =
+    get("review-email")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const expectedEmail =
+    user.email
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    enteredEmail !== expectedEmail ||
+    get("review-code").value !== "246810"
+  ) {
+
+    result.textContent =
+      "Identity check failed. Use " +
+      user.name +
+      "'s account email and verification code.";
+
     return;
+
   }
-  if (!updateYield()) return;
-  const blocked = markets[active].restricted;
-  result.className = "clearance " + (blocked ? "blocked" : "");
-  result.textContent = blocked
-    ? "BLOCKED · Identity reconfirmed. Maya's government affiliation matches this market's restrictions. No trade permitted. Her account remains in good standing."
-    : "CLEARED · Demo identity reconfirmed; no affiliation restriction matched. Simulated market rules reviewed. No money moved.";
-  sessionStorage.setItem("mayaLastDecision", result.textContent);
-  get("continue").textContent = blocked ? "Access blocked for this market" : "Demo review complete";
-  get("continue").disabled = true;
+
+
+
+  /*
+   * Make sure the trade amount / payout
+   * information is valid.
+   */
+
+  if (!updateYield())
+    return;
+
+
+
+  /*
+   * ============================================================
+   * CHECK AFFILIATION
+   * ============================================================
+   */
+
+  const market =
+    markets[active];
+
+
+  const blocked =
+    userBlockedFromMarket(
+      market
+    );
+
+
+  result.className =
+    "clearance " +
+    (
+      blocked
+        ? "blocked"
+        : ""
+    );
+
+
+
+  /*
+   * ============================================================
+   * BLOCKED MARKET
+   * ============================================================
+   */
+
+  if (blocked) {
+
+    result.textContent =
+      "BLOCKED · Identity reconfirmed. " +
+      user.name +
+      "'s " +
+      user.role +
+      " affiliation matches this market's restrictions. " +
+      "No trade permitted. The account remains in good standing.";
+
+
+    get("continue").textContent =
+      "Access blocked for this market";
+
+
+    get("continue").disabled =
+      true;
+
+
+    /*
+     * Store the access decision.
+     */
+
+    sessionStorage.setItem(
+      "lastDecision",
+      result.textContent
+    );
+
+
+    return;
+
+  }
+
+
+
+  /*
+   * ============================================================
+   * CLEARED MARKET
+   * ============================================================
+   */
+
+  result.textContent =
+    "CLEARED · " +
+    user.name +
+    "'s identity was reconfirmed. " +
+    "No affiliation restriction matched this market.";
+
+
+
+  /*
+   * ============================================================
+   * CREATE PENDING TRADE
+   * ============================================================
+   *
+   * We do NOT create the actual transaction yet.
+   *
+   * This object represents what the user is
+   * considering purchasing.
+   *
+   * transactions.html will turn it into an
+   * actual audit transaction after purchase.
+   */
+
+  const pendingTrade = {
+
+    title:
+      market.title,
+
+    category:
+      market.category,
+
+    yes:
+      market.yes,
+
+    side:
+      side,
+
+    /*
+     * Preserve the amount the user already
+     * entered on the market screen.
+     */
+
+    amount:
+      Number(
+        get("amount").value
+      ),
+
+    /*
+     * Eventually this should come directly
+     * from the market's real closing data.
+     */
+
+    lockTime:
+      "11:00 PM ET"
+
+  };
+
+
+
+  /*
+   * Save pending trade so transactions.html
+   * can retrieve it.
+   */
+
+  sessionStorage.setItem(
+    "pendingTrade",
+    JSON.stringify(
+      pendingTrade
+    )
+  );
+
+
+
+  /*
+   * Save access decision.
+   */
+
+  sessionStorage.setItem(
+    "lastDecision",
+    result.textContent
+  );
+
+
+
+  /*
+   * ============================================================
+   * TURN BUTTON INTO PURCHASE BUTTON
+   * ============================================================
+   */
+
+  const continueButton =
+    get("continue");
+
+
+  continueButton.textContent =
+    "Continue to purchase →";
+
+
+  /*
+   * IMPORTANT:
+   *
+   * clearTrade() was originally attached
+   * to this button.
+   *
+   * Now that clearance succeeded, replace
+   * that behavior with checkout navigation.
+   */
+
+  continueButton.onclick =
+    goToTransaction;
+
+
+  continueButton.disabled =
+    false;
+
 }
+
+
+
+/*
+ * ============================================================
+ * CLOSE TICKET
+ * ============================================================
+ */
+
+function goToTransaction() {
+
+  /*
+   * Safety check:
+   *
+   * transactions.html requires a pending
+   * trade before it can load.
+   */
+
+  const pendingTrade =
+    sessionStorage.getItem(
+      "pendingTrade"
+    );
+
+
+  if (!pendingTrade) {
+
+    get("clearance").textContent =
+      "Trade information is missing. Please review the market again.";
+
+    return;
+
+  }
+
+
+  /*
+   * Send the user to checkout.
+   */
+
+  location.href =
+    "transactions.html";
+
+}
+
+
+
 function closeTicket() {
-  get("ticket").classList.remove("show");
-  get("overlay").classList.remove("show");
-  document.body.classList.remove("modal-open");
-  document.querySelector(".shell").inert = false;
-  renderList();
-  if(previousFocus?.isConnected) previousFocus.focus();
-  else get("list").children[active]?.focus();
+
+  get("ticket")
+    .classList
+    .remove("show");
+
+
+  get("overlay")
+    .classList
+    .remove("show");
+
+
+  previousFocus?.focus();
+
 }
-document.addEventListener("keydown", event => {
-  if (!get("ticket").classList.contains("show")) return;
-  if (event.key === "Escape") closeTicket();
-  if (event.key === "Tab") {
-    const nodes = [...get("ticket").querySelectorAll("button:not([disabled]), input, a[href], summary")];
-    const first = nodes[0], last = nodes[nodes.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+
+
+
+/*
+ * ============================================================
+ * KEYBOARD ACCESSIBILITY
+ * ============================================================
+ */
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      !get("ticket")
+        .classList
+        .contains("show")
+    )
+      return;
+
+
+    if (
+      event.key === "Escape"
+    )
+      closeTicket();
+
+
+    if (
+      event.key === "Tab"
+    ) {
+
+      const nodes = [
+        ...get("ticket")
+          .querySelectorAll(
+            "button:not([disabled]), input, a[href]"
+          )
+      ];
+
+
+      const first =
+        nodes[0];
+
+
+      const last =
+        nodes[
+          nodes.length - 1
+        ];
+
+
+      if (
+        event.shiftKey &&
+        document.activeElement === first
+      ) {
+
+        event.preventDefault();
+
+        last.focus();
+
+      }
+
+      else if (
+        !event.shiftKey &&
+        document.activeElement === last
+      ) {
+
+        event.preventDefault();
+
+        first.focus();
+
+      }
+
+    }
+
   }
-});
+);
+
+
+
+/*
+ * ============================================================
+ * THEME
+ * ============================================================
+ */
+
+
 function toggleTheme() {
-  const root = document.documentElement;
-  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-  localStorage.theme = root.dataset.theme;
+
+  const root =
+    document.documentElement;
+
+
+  root.dataset.theme =
+    root.dataset.theme === "dark"
+      ? "light"
+      : "dark";
+
+
+  localStorage.theme =
+    root.dataset.theme;
+
 }
-document.documentElement.dataset.theme = localStorage.theme || "light";
+
+
+document.documentElement.dataset.theme =
+  localStorage.theme ||
+  "light";
+
+
+
+/*
+ * ============================================================
+ * LIVE ODDS
+ * ============================================================
+ */
+
+
 let lastOddsPull = 0;
-let pullingOdds = false;
+
+
 async function refreshLiveOdds() {
-  if (pullingOdds) return;
-  pullingOdds = true;
-  await Promise.all(markets.map(async m => {
-    if (!m.slug && !m.auto) return;
-    m.live = false;
+
+  for (
+    const m of markets
+  ) {
+
+    if (!m.slug)
+      continue;
+
+
     try {
-      const r = await fetch(m.auto ? "/api/odds/auto/" + m.auto : "/api/odds/" + encodeURIComponent(m.slug), {signal:AbortSignal.timeout(8000)});
-      if (!r.ok) return;
-      const d = await r.json();
-      const target = (m.liveOutcome || "Yes").toLowerCase();
-      const o = (d.outcomes || []).find(x => String(x.name).toLowerCase() === target);
-      if (o && Number.isFinite(o.price) && Math.round(o.price*100)>0 && Math.round(o.price*100)<100) { m.yes = Math.round(o.price * 100); m.live = true; if (m.auto && typeof d.question === "string") m.title = d.question; }
-    } catch (e) { /* Polymarket unreachable - static demo price stays */ }
-  }));
-  pullingOdds = false;
-  lastOddsPull = Date.now();
-  if (!get("ticket").classList.contains("show")) renderList();
+
+      const r =
+        await fetch(
+          m.auto
+            ? "/api/odds/auto/" +
+              m.auto
+            : "/api/odds/" +
+              encodeURIComponent(
+                m.slug
+              )
+        );
+
+
+      if (!r.ok)
+        continue;
+
+
+      const d =
+        await r.json();
+
+
+      const target =
+        (
+          m.liveOutcome ||
+          "Yes"
+        ).toLowerCase();
+
+
+      const o =
+        (
+          d.outcomes ||
+          []
+        ).find(
+          x =>
+            String(x.name)
+              .toLowerCase()
+              === target
+        );
+
+
+      if (
+        o &&
+        Number.isFinite(
+          o.price
+        )
+      ) {
+
+        m.yes =
+          Math.round(
+            o.price * 100
+          );
+
+
+        m.live =
+          true;
+
+
+        if (
+          m.auto &&
+          d.question
+        ) {
+
+          m.title =
+            d.question;
+
+        }
+
+      }
+
+    }
+
+    catch (e) {
+
+      /*
+       * Polymarket unreachable.
+       * Static demo price stays.
+       */
+
+    }
+
+  }
+
+
+  lastOddsPull =
+    Date.now();
+
+
+  renderList();
+
 }
+
+
+
 refreshLiveOdds();
-setInterval(refreshLiveOdds, 10000);
-setInterval(() => {
-  const el = document.getElementById("odds-age");
-  if (!el) return;
-  if (!lastOddsPull) { el.textContent = "Pulling live Polymarket odds..."; return; }
-  const secs = Math.floor((Date.now() - lastOddsPull) / 1000);
-  const liveCount = markets.filter(m=>m.live).length;
-  el.textContent = liveCount + "/" + markets.length + " live quotes · checked " + secs + "s ago · other prices illustrative";
-}, 1000);
-if (sessionStorage.getItem("mayaVerified") !== "yes") location.replace("login.html");
+
+
+setInterval(
+  refreshLiveOdds,
+  10000
+);
+
+
+
+setInterval(
+  () => {
+
+    const el =
+      get("odds-age");
+
+
+    if (!el)
+      return;
+
+
+    if (!lastOddsPull) {
+
+      el.textContent =
+        "Pulling live Polymarket odds...";
+
+      return;
+
+    }
+
+
+    const secs =
+      Math.floor(
+        (
+          Date.now() -
+          lastOddsPull
+        ) / 1000
+      );
+
+
+    el.textContent =
+      "Live Polymarket odds pulled " +
+      secs +
+      "s ago · refreshes every 10s";
+
+  },
+
+  1000
+);
 
 </script>
+
 </body>
 </html>
