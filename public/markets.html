@@ -762,11 +762,11 @@
         <small style="font-size:14px">/100</small>
       </div>
 
-      <b>Good standing</b>
+      <b id="access-score-label">Good standing</b>
 
-      <p class="muted" style="font-size:12px">
-        Standing is an explainable record of platform-policy outcomes—not a behavioral credit score.
-      </p>
+      <div class="muted" id="access-standing-text" style="font-size:12px">
+        Standing is good - banned off nothing.
+      </div>
 
 
       <div class="agent">
@@ -1081,7 +1081,7 @@
     open
   >
 
-    <summary>
+    <summary id="access-explainer-summary">
       Your access score: 100 / 100 · Good standing
     </summary>
 
@@ -1089,8 +1089,8 @@
       Your score describes your platform standing.
       The planned premium-market policy will require a minimum score,
       shown on each eligible market.
-      Thresholds and score deductions are still to be configured;
-      this demo keeps <span class="dynamic-name"></span> at 100.
+      The number is the share of markets on this board
+      <span class="dynamic-name"></span> can actually trade.
     </p>
 
     <p>
@@ -1630,27 +1630,42 @@ function currentUserIsMinor() {
 }
 
 // Returns the block reason (affiliation token or "under-18"), or null.
-// Sidebar score = share of LIVE backend markets this account can trade -
-// same denominator as the profile page, so the two never disagree.
-let liveMarketList = null;
-async function updateAccessScore() {
+// Sidebar score = share of the markets ON THIS BOARD the current account can
+// trade (minors: 0 - total ban). The visible board is what the user sees, so
+// the visible board is the denominator.
+function accessBanReason(token) {
+  if (token === "under-18") return "account is under 18";
+  if (token === "vt-athletics") return "Virginia Tech athletics affiliation";
+  if (token === "va-politician-household") return "government-household affiliation";
+  if (token === "anthropic-staff") return "Anthropic staff affiliation";
+  return token;
+}
+
+function updateAccessScore() {
   const el = document.getElementById("access-score-num");
   if (!el) return;
-  if (currentUserIsMinor()) { el.textContent = 0; return; }
-  try {
-    if (!liveMarketList) {
-      const r = await fetch("/api/markets");
-      if (r.ok) liveMarketList = await r.json();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const banned = markets.map(m => ({ title: m.title, why: userBlockedFromMarket(m) })).filter(x => x.why);
+  const open = markets.length - banned.length;
+  const pct = markets.length ? Math.round((open / markets.length) * 100) : 100;
+  el.textContent = pct;
+  const label = pct === 100 ? "Good standing" : pct === 0 ? "No market access" : "Restricted access";
+  const labelEl = document.getElementById("access-score-label");
+  if (labelEl) labelEl.textContent = label;
+  const summary = document.getElementById("access-explainer-summary");
+  if (summary) summary.textContent = "Your access score: " + pct + " / 100 · " + label;
+  const txt = document.getElementById("access-standing-text");
+  if (txt) {
+    if (currentUserIsMinor()) {
+      txt.textContent = "Banned from every market - accounts under 18 cannot trade.";
+    } else if (!banned.length) {
+      txt.textContent = "Standing is good - banned off nothing.";
+    } else {
+      txt.innerHTML = "You are banned from:<ul style=\"margin:6px 0 0;padding-left:18px\">" +
+        banned.map(x => "<li>" + esc(x.title) + " <span class=\"muted\">(" + esc(accessBanReason(x.why)) + ")</span></li>").join("") +
+        "</ul>";
     }
-    if (liveMarketList) {
-      const mine = currentUserAffiliations().map(a => String(a).toLowerCase());
-      const open = liveMarketList.filter(m => !(m.restrictedAffiliations || []).some(x => mine.includes(String(x).toLowerCase()))).length;
-      el.textContent = liveMarketList.length ? Math.round((open / liveMarketList.length) * 100) : 100;
-      return;
-    }
-  } catch (e) { /* fall back to the demo board below */ }
-  const open = markets.filter(m => !userBlockedFromMarket(m)).length;
-  el.textContent = markets.length ? Math.round((open / markets.length) * 100) : 100;
+  }
 }
 updateAccessScore();
 
