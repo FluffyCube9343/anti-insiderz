@@ -323,6 +323,10 @@
   color:#a94442;
 }
 
+.badge.cancelled {
+  color:var(--muted);
+}
+
 .score-impact {
   color:var(--muted);
   font-size:10px;
@@ -1689,8 +1693,11 @@ function calculateScore(entries) {
 
 function renderScore(entries) {
 
+  // Demo decision: the market access score is a STATIC 100. It is a policy
+  // display, not a live computation - enforcement events still show in the
+  // ledger below, they just never move this number.
   const score =
-    calculateScore(entries);
+    100;
 
 
   get("score-number").textContent =
@@ -1956,7 +1963,9 @@ function renderAudit() {
             ? "blocked"
             : entry.status === "FLAGGED"
               ? "warning"
-              : "allowed";
+              : entry.status === "CANCELLED"
+                ? "cancelled"
+                : "allowed";
 
 
         const date =
@@ -2074,17 +2083,6 @@ function renderAudit() {
                 ${entry.status || "ALLOWED"}
               </span>
 
-
-              <span class="score-impact">
-
-                ${
-                  impact < 0
-                    ? impact + " access score"
-                    : "No score penalty"
-                }
-
-              </span>
-
             </div>
 
 
@@ -2163,7 +2161,7 @@ renderAudit();
     if (!Array.isArray(rows)) return;
     window.__serverAuditEntries = rows.map(d => ({
       timestamp: d.timestamp,
-      status: String(d.decision || "").toUpperCase(),
+      status: Number(d.amount) < 0 ? "CANCELLED" : String(d.decision || "").toUpperCase(),
       cost: Number(d.amount || 0),
       contracts: d.contracts ?? 0,
       realizedProfit: 0,
