@@ -233,6 +233,21 @@
       font:23px var(--display);
     }
 
+    /* Price-move flashes: hold green/red ~1.5s, ease back to ink by 2s. */
+    @keyframes flashUp {
+      0%, 70% { color:#15803d; }
+      100% { color:var(--ink); }
+    }
+
+    @keyframes flashDown {
+      0%, 70% { color:#dc2626; }
+      100% { color:var(--ink); }
+    }
+
+    .flash-up { animation:flashUp 2s ease-out; }
+
+    .flash-down { animation:flashDown 2s ease-out; }
+
     .change {
       color:var(--accent);
       font-size:12px;
@@ -1386,8 +1401,8 @@ else {
 // Backend market UUIDs per UI market (blank = no live market wired yet).
 const MARKET_UUIDS = {
   0: "10000000-0000-4000-8000-000000000001", // Next VT game
-  2: "10000000-0000-4000-8000-000000000002", // VA abortion amendment
-  4: "10000000-0000-4000-8000-000000000004", // Claude Opus Sep 21
+  3: "10000000-0000-4000-8000-000000000002", // VA abortion amendment
+  5: "10000000-0000-4000-8000-000000000004", // Claude Opus Sep 21
 };
 const markets = [
 
@@ -1417,27 +1432,52 @@ const markets = [
 
 
   {
-    category: "SPORTS",
+    category: "SIMULATED",
 
     title:
-      "Following Virginia Tech game",
+      "Simulated 5-minute index",
 
-    yes: 55,
+    yes: 50,
 
     restriction:
       null,
 
     restrictedAffiliations:
-      ["vt-athletics"],
+      [],
 
     auto:
-      "vt1",
+      "sim5",
 
     liveOutcome:
-      "Virginia Tech",
+      "Up",
 
     info:
-      "Live Polymarket odds for the VT game after the next one. Shows a demo price until Polymarket posts that game. Players and athletics staff (vt-athletics) are restricted."
+      "A fake rolling 5-minute market: a mean-reverting random walk repriced every 10 seconds, pinned between 10c and 90c. Nobody has inside information on a random walk - every compliant trader clears."
+  },
+
+
+  {
+    category: "SIMULATED",
+
+    title:
+      "Simulated 5-minute index B",
+
+    yes: 50,
+
+    restriction:
+      null,
+
+    restrictedAffiliations:
+      [],
+
+    auto:
+      "sim5b",
+
+    liveOutcome:
+      "Up",
+
+    info:
+      "A second fake rolling 5-minute market on an independent random walk - same 10-second repricing and 10c/90c rails, different path. Nobody can have inside information on a random walk."
   },
 
 
@@ -1807,6 +1847,16 @@ function renderList() {
           userBlockedFromMarket(m);
 
 
+        // A fresh flash (<2s old) colors the quotes; the CSS animation eases
+        // them back to ink. Yes and No always move in opposite directions.
+        const flashDir =
+          m.flash && Date.now() - m.flash.at < 2000 ? m.flash.dir : 0;
+        const yesFlash =
+          flashDir > 0 ? " flash-up" : flashDir < 0 ? " flash-down" : "";
+        const noFlash =
+          flashDir > 0 ? " flash-down" : flashDir < 0 ? " flash-up" : "";
+
+
         return `
           <button
             type="button"
@@ -1853,7 +1903,7 @@ function renderList() {
               </span>
 
               <span
-                class="quote"
+                class="quote${yesFlash}"
                 style="display:block"
               >
                 ${m.yes}¢
@@ -1869,7 +1919,7 @@ function renderList() {
               </span>
 
               <span
-                class="quote"
+                class="quote${noFlash}"
                 style="display:block"
               >
                 ${100 - m.yes}¢
@@ -1987,8 +2037,30 @@ async function openTicket(i) {
   get("real-result").textContent = "";
   get("real-result").className = "clearance";
 
+  selectSide("yes");
+
+
+  get("ticket")
+    .classList
+    .add("show");
+
+
+  get("overlay")
+    .classList
+    .add("show");
+
+
+  get("ticket")
+    .querySelector(".close")
+    .focus();
+
+  // Linking happens after the modal is already open: no perceived wait, the
+  // UUID just pops in when the server answers.
   // Cards without a hardcoded UUID get a backend market provisioned on
   // demand - subject is the natural key, so reopening reuses the same row.
+  get("real-market").placeholder =
+    "no backend market linked to this card";
+
   if (MARKET_UUIDS[i]) {
 
     get("real-market").value =
@@ -2000,6 +2072,9 @@ async function openTicket(i) {
 
     get("real-market").value =
       "";
+
+    get("real-market").placeholder =
+      "linking backend market...";
 
     if (!traderSession) {
 
@@ -2043,6 +2118,9 @@ async function openTicket(i) {
         get("real-market").value =
           data.marketId;
 
+        get("real-market").placeholder =
+          "no backend market linked to this card";
+
       }
 
       else {
@@ -2066,22 +2144,6 @@ async function openTicket(i) {
     }
 
   }
-  selectSide("yes");
-
-
-  get("ticket")
-    .classList
-    .add("show");
-
-
-  get("overlay")
-    .classList
-    .add("show");
-
-
-  get("ticket")
-    .querySelector(".close")
-    .focus();
 
 }
 
@@ -2790,6 +2852,10 @@ async function refreshLiveOdds() {
         )
       ) {
 
+        const oldYes = m.yes;
+        const hadLive = m.live === true;
+
+
         m.yes =
           Math.round(
             o.price * 100
@@ -2798,6 +2864,13 @@ async function refreshLiveOdds() {
 
         m.live =
           true;
+
+
+        // Only flash on live-to-live moves, not the first pull replacing the
+        // static placeholder price.
+        if (hadLive && m.yes !== oldYes) {
+          m.flash = { dir: m.yes > oldYes ? 1 : -1, at: Date.now() };
+        }
 
 
         if (
