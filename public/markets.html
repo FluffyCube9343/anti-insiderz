@@ -1913,7 +1913,15 @@ renderList();
  */
 
 
-function openTicket(i) {
+// Must match canonicalEnsurePayload in app/api/markets/ensure/route.ts exactly.
+function canonicalEnsurePayload(e) {
+  return JSON.stringify({
+    agentId: e.agentId, subject: e.subject,
+    restrictedAffiliations: e.restrictedAffiliations, timestamp: e.timestamp,
+  });
+}
+
+async function openTicket(i) {
 
   previousFocus =
     document.activeElement;
@@ -1976,9 +1984,88 @@ function openTicket(i) {
     false;
 
 
-  get("real-market").value = MARKET_UUIDS[i] || "";
   get("real-result").textContent = "";
   get("real-result").className = "clearance";
+
+  // Cards without a hardcoded UUID get a backend market provisioned on
+  // demand - subject is the natural key, so reopening reuses the same row.
+  if (MARKET_UUIDS[i]) {
+
+    get("real-market").value =
+      MARKET_UUIDS[i];
+
+  }
+
+  else {
+
+    get("real-market").value =
+      "";
+
+    if (!traderSession) {
+
+      get("real-result").textContent =
+        "Sign in as a trader first - market provisioning is a signed action.";
+
+      return;
+
+    }
+
+    try {
+
+      const ensureReq = {
+        agentId: traderSession.agentId,
+        subject: m.title,
+        restrictedAffiliations: m.restrictedAffiliations || [],
+        timestamp: new Date().toISOString(),
+      };
+
+      const key =
+        await importIdentityKey(traderSession.keyPem);
+
+      const sig =
+        await signPayload(key, new TextEncoder().encode(canonicalEnsurePayload(ensureReq)));
+
+      const res =
+        await fetch("/api/markets/ensure", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...ensureReq, signature: bufferToBase64(sig) })
+        });
+
+      const data =
+        await res.json();
+
+      if (res.ok && data.marketId) {
+
+        MARKET_UUIDS[i] =
+          data.marketId;
+
+        get("real-market").value =
+          data.marketId;
+
+      }
+
+      else {
+
+        get("real-result").className =
+          "clearance blocked";
+
+        get("real-result").textContent =
+          "Could not link a backend market (" + res.status + "): " + (data.error || "unknown error");
+
+      }
+
+    } catch (e) {
+
+      get("real-result").className =
+        "clearance blocked";
+
+      get("real-result").textContent =
+        "Could not reach the server to link a backend market: " + (e && e.message ? e.message : e);
+
+    }
+
+  }
   selectSide("yes");
 
 
