@@ -743,7 +743,7 @@
       </span>
 
       <div class="score">
-        100
+        <span id="access-score-num">100</span>
         <small style="font-size:14px">/100</small>
       </div>
 
@@ -1266,6 +1266,7 @@ const user =
 // Key sessions have no mock profile, so pull the real declared affiliations
 // from the registry route - the review gate must judge the same identity the backend does.
 let traderAffiliations = [];
+let traderBirthday = null;
 if (traderSession) {
   (async () => {
     try {
@@ -1273,8 +1274,11 @@ if (traderSession) {
       if (!r.ok) return;
       const b = await r.json();
       traderAffiliations = Array.isArray(b.affiliations) ? b.affiliations : [];
+      traderBirthday = b.birthday || null;
       document.getElementById("sidebar-role").textContent = traderAffiliations.join(", ") || "none declared";
+      if (b.fullName) { user.name = b.fullName; document.getElementById("account-name").textContent = b.fullName; document.getElementById("sidebar-name").textContent = b.fullName; }
       renderList();
+      updateAccessScore();
     } catch (e) { /* the backend gate still decides regardless */ }
   })();
 }
@@ -1578,8 +1582,40 @@ function currentUserAffiliations() {
   return [];
 }
 
-// Returns the matched restricted affiliation, or null - every market type is checked now.
+// Mirrors the backend age gate: under-18 accounts cannot trade on any market.
+function currentUserIsMinor() {
+  const b = traderSession ? traderBirthday : (user && user.birthday);
+  if (!b) return false;
+  return (Date.now() - new Date(b).getTime()) / (365.25 * 24 * 3600 * 1000) < 18;
+}
+
+// Returns the block reason (affiliation token or "under-18"), or null.
+// Sidebar score = share of LIVE backend markets this account can trade -
+// same denominator as the profile page, so the two never disagree.
+let liveMarketList = null;
+async function updateAccessScore() {
+  const el = document.getElementById("access-score-num");
+  if (!el) return;
+  if (currentUserIsMinor()) { el.textContent = 0; return; }
+  try {
+    if (!liveMarketList) {
+      const r = await fetch("/api/markets");
+      if (r.ok) liveMarketList = await r.json();
+    }
+    if (liveMarketList) {
+      const mine = currentUserAffiliations().map(a => String(a).toLowerCase());
+      const open = liveMarketList.filter(m => !(m.restrictedAffiliations || []).some(x => mine.includes(String(x).toLowerCase()))).length;
+      el.textContent = liveMarketList.length ? Math.round((open / liveMarketList.length) * 100) : 100;
+      return;
+    }
+  } catch (e) { /* fall back to the demo board below */ }
+  const open = markets.filter(m => !userBlockedFromMarket(m)).length;
+  el.textContent = markets.length ? Math.round((open / markets.length) * 100) : 100;
+}
+updateAccessScore();
+
 function userBlockedFromMarket(market) {
+  if (currentUserIsMinor()) return "under-18";
   const mine = currentUserAffiliations();
   return (market.restrictedAffiliations || []).find(r => mine.some(a => String(a).toLowerCase() === r.toLowerCase())) || null;
 }
@@ -1802,7 +1838,7 @@ function renderList() {
               >
                 ${
                   blocked
-                    ? "Affiliation review required"
+                    ? (userBlockedFromMarket(m) === "under-18" ? "Under 18 · trading disabled" : "Affiliation review required")
                     : "Available for review"
                 }
               </span>
@@ -2283,12 +2319,9 @@ function clearTrade() {
   if (blocked) {
 
     result.textContent =
-      "BLOCKED · Identity reconfirmed. " +
-      user.name +
-      "'s " +
-      blocked +
-      " affiliation matches this market's restrictions. " +
-      "No trade permitted. The account remains in good standing.";
+      blocked === "under-18"
+        ? "BLOCKED · Identity reconfirmed. " + user.name + " is under 18, so this account cannot trade on any market."
+        : "BLOCKED · Identity reconfirmed. " + user.name + "'s " + blocked + " affiliation matches this market's restrictions. No trade permitted. The account remains in good standing.";
 
 
     get("continue").textContent =

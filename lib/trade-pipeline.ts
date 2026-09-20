@@ -23,6 +23,11 @@ export class TradePipeline {
     // 4. A declared affiliation match is a hard exclusion - checked before any money movement.
     const forbidden = agent.affiliations.find(a => market.restrictedAffiliations.some(r => r.toLowerCase() === a.toLowerCase()));
     if (forbidden) return block(`Affiliation check blocked trade: agent is affiliated with restricted party \"${forbidden}\".`);
+    // 4b. Minors cannot trade on any market, regardless of affiliation.
+    if (agent.birthday) {
+      const ageYears = (Date.now() - new Date(agent.birthday).getTime()) / (365.25 * 24 * 3600 * 1000);
+      if (ageYears < 18) return block("Age check blocked trade: account holder is under 18 and cannot trade on any market.");
+    }
     // 5. Never submit a transfer without an observed sufficient balance.
     let balance: number;
     try { balance = await this.payments.balance(agent.walletId); } catch (error) { return block(`Solvency check could not be completed: ${error instanceof Error ? error.message : "unknown Nessie error"}`); }

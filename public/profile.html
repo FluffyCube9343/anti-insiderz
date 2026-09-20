@@ -1340,6 +1340,11 @@ get("profile-affiliation").textContent =
     user.role
   );
 
+if (!traderSession && user) {
+  // Mock profiles map their role to the politics restriction, same as the review gate.
+  renderAccessScore(governmentRoles.includes(user.role) ? ["va-politician-household"] : [], user.birthday);
+}
+
 if (traderSession) {
   // Overwrite the placeholders with the real registry record for this identity.
   (async () => {
@@ -1347,11 +1352,13 @@ if (traderSession) {
       const r = await fetch("/api/agents/" + encodeURIComponent(traderSession.agentId));
       if (!r.ok) throw new Error("registry lookup failed");
       const b = await r.json();
+      if (b.fullName) get("profile-name").textContent = b.fullName;
       get("profile-email").textContent = b.email || "Not provided";
       get("profile-role").textContent = b.role || "Not provided";
       get("profile-birthday").textContent = formatBirthday(b.birthday || "");
       get("profile-affiliation").textContent =
         (Array.isArray(b.affiliations) && b.affiliations.length && b.affiliations.join(", ")) || "None declared";
+      renderAccessScore(b.affiliations, b.birthday);
     } catch (e) {
       get("profile-affiliation").textContent = "Registry lookup failed";
     }
@@ -1463,6 +1470,39 @@ renderBankingProfile();
 window.addEventListener("storage", event => {
   if (event.key === "bankAccount" || event.key === null) renderBankingProfile();
 });
+
+// Score = share of open markets this account's affiliations can actually trade.
+async function renderAccessScore(affiliations, birthday) {
+  try {
+    const r = await fetch("/api/markets");
+    if (!r.ok) return;
+    const list = await r.json();
+    const mine = (affiliations || []).map(a => String(a).toLowerCase());
+    const open = list.filter(m => !(m.restrictedAffiliations || []).some(x => mine.includes(String(x).toLowerCase()))).length;
+    // The backend age gate bars minors from every market, so their access is 0.
+    const minor = birthday && (Date.now() - new Date(birthday).getTime()) / (365.25 * 24 * 3600 * 1000) < 18;
+    const pct = minor ? 0 : (list.length ? Math.round((open / list.length) * 100) : 100);
+    get("score-number").textContent = pct;
+    get("score-marker").style.left = pct + "%";
+    const state = get("score-state");
+    if (pct >= 70) {
+      get("score-label").textContent = "Good standing";
+      get("score-state-title").textContent = "Broad market access";
+      get("score-state-description").textContent = "This account can trade most open markets. Individual markets still restrict specific affiliations.";
+      state.className = "score-state";
+    } else if (pct >= 40) {
+      get("score-label").textContent = "Limited access";
+      get("score-state-title").textContent = "Some markets restricted";
+      get("score-state-description").textContent = "This account's declared affiliations restrict it from several open markets.";
+      state.className = "score-state warning";
+    } else {
+      get("score-label").textContent = "Narrow access";
+      get("score-state-title").textContent = "Most markets restricted";
+      get("score-state-description").textContent = "This account's declared affiliations restrict it from most open markets.";
+      state.className = "score-state banned";
+    }
+  } catch (e) { /* leave the audit-based score if the market list cannot load */ }
+}
 
 function getUserAuditLog() {
 
