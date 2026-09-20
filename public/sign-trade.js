@@ -140,3 +140,11 @@ async function signAndSubmitTrade({ agentId, marketId, outcome, amount, keyPem }
   const body = await r.json().catch(() => ({}));
   return { status: r.status, body };
 }
+
+// Must match lib/crypto.ts canonicalClosePayload exactly (key order matters).
+function canonicalClosePayload(c) {
+  return JSON.stringify({
+    closeId: c.closeId, agentId: c.agentId, marketId: c.marketId,
+    outcome: c.outcome, contracts: c.contracts, timestamp: c.timestamp,
+  });
+}

@@ -2,7 +2,7 @@
 
 <html lang="en">
 
-<head><script src="demo-session.js"></script><script src="bank-state.js"></script>
+<head><script src="demo-session.js"></script><script src="bank-state.js"></script><script src="sign-trade.js"></script>
 
 <meta charset="utf-8">
 
@@ -28,6 +28,18 @@
   gap:22px;
   margin-top:45px;
   align-items:start;
+}
+
+.profile-stack {
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+  min-width:0;
+}
+
+.audit-updated {
+  color:var(--muted);
+  font-size:11px;
 }
 
 
@@ -325,6 +337,33 @@
 
 .badge.cancelled {
   color:var(--muted);
+}
+
+.badge.closed {
+  color:var(--muted);
+}
+
+.audit-close {
+  margin-top:10px;
+}
+
+.close-position-btn {
+  background:transparent;
+  border:1px solid var(--accent);
+  color:var(--accent);
+  cursor:pointer;
+  font:inherit;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.07em;
+  padding:7px 10px;
+  text-transform:uppercase;
+}
+
+.close-position-btn:disabled {
+  border-color:var(--muted);
+  color:var(--muted);
+  cursor:default;
 }
 
 .score-impact {
@@ -683,6 +722,7 @@
      LEFT — IDENTITY
      ========================================================== -->
 
+<div class="profile-stack">
 <section class="profile card">
 
   <span class="eyebrow">
@@ -826,9 +866,9 @@
 
 
 
-    <!-- SCORE RULES -->
+    <!-- SCORE RULES: hidden for the demo - the access share has no deductions -->
 
-    <div class="score-rules">
+    <div class="score-rules" style="display:none">
 
       <div class="score-rule">
 
@@ -919,98 +959,6 @@
 
 <!-- ==========================================================
      RIGHT — AUDIT LOG
-     ========================================================== -->
-
-<section class="audit card">
-
-  <div class="audit-header">
-
-    <div>
-
-      <span class="eyebrow">
-        Audit log
-      </span>
-
-      <h2 class="display">
-        Account activity
-      </h2>
-
-      <p class="muted">
-        Trades and enforcement decisions associated with this identity.
-      </p>
-
-    </div>
-
-
-    <span
-      class="audit-count"
-      id="audit-count"
-    >
-      0 EVENTS
-    </span>
-
-  </div>
-
-
-
-  <div class="audit-summary">
-
-    <div class="audit-stat">
-
-      <span>
-        Committed
-      </span>
-
-      <strong id="total-committed">
-        $0.00
-      </strong>
-
-    </div>
-
-
-    <div class="audit-stat">
-
-      <span>
-        Realized P/L
-      </span>
-
-      <strong id="total-profit">
-        $0.00
-      </strong>
-
-    </div>
-
-
-    <div class="audit-stat">
-
-      <span>
-        Warnings
-      </span>
-
-      <strong id="warning-count">
-        0
-      </strong>
-
-    </div>
-
-  </div>
-
-
-
-  <div id="audit-log"></div>
-
-
-  <div
-    class="empty"
-    id="audit-empty"
-  >
-    No account activity has been recorded yet.
-  </div>
-
-</section>
-
-<!-- ==========================================================
-     BANKING
      ========================================================== -->
 
 <section class="banking card">
@@ -1192,6 +1140,101 @@
   </div>
 
 </section>
+</div>
+<section class="audit card">
+
+  <div class="audit-header">
+
+    <div>
+
+      <span class="eyebrow">
+        Audit log
+      </span>
+
+      <h2 class="display">
+        Account activity
+      </h2>
+
+      <p class="muted">
+        Trades and enforcement decisions associated with this identity.
+        <span class="audit-updated" id="audit-updated"></span>
+      </p>
+
+    </div>
+
+
+    <span
+      class="audit-count"
+      id="audit-count"
+    >
+      0 EVENTS
+    </span>
+
+  </div>
+
+
+
+  <div class="audit-summary">
+
+    <div class="audit-stat">
+
+      <span>
+        Committed
+      </span>
+
+      <strong id="total-committed">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="audit-stat">
+
+      <span>
+        Live P/L
+      </span>
+
+      <strong id="total-profit">
+        $0.00
+      </strong>
+
+    </div>
+
+
+    <div class="audit-stat">
+
+      <span>
+        Warnings
+      </span>
+
+      <strong id="warning-count">
+        0
+      </strong>
+
+    </div>
+
+  </div>
+
+
+
+  <div id="audit-log"></div>
+
+
+  <div
+    class="empty"
+    id="audit-empty"
+  >
+    No account activity has been recorded yet.
+  </div>
+
+</section>
+
+<!-- ==========================================================
+     BANKING
+     ========================================================== -->
+
+
 
 
 </main>
@@ -1444,6 +1487,23 @@ function getBankAccount() {
   return window.BankState.account(localStorage, user.email);
 }
 
+function money(value) {
+
+  const number =
+    Number(value || 0);
+
+
+  return (
+    number < 0
+      ? "-$"
+      : "$"
+  ) +
+  Math.abs(number)
+    .toFixed(2);
+
+}
+
+
 function renderBankingProfile() {
 
   const account =
@@ -1533,37 +1593,43 @@ window.addEventListener("storage", event => {
   if (event.key === "bankAccount" || event.key === null) renderBankingProfile();
 });
 
-// Score = share of open markets this account's affiliations can actually trade.
-async function renderAccessScore(affiliations, birthday) {
-  try {
-    const r = await fetch("/api/markets");
-    if (!r.ok) return;
-    const list = await r.json();
-    const mine = (affiliations || []).map(a => String(a).toLowerCase());
-    const open = list.filter(m => !(m.restrictedAffiliations || []).some(x => mine.includes(String(x).toLowerCase()))).length;
-    // The backend age gate bars minors from every market, so their access is 0.
-    const minor = birthday && (Date.now() - new Date(birthday).getTime()) / (365.25 * 24 * 3600 * 1000) < 18;
-    const pct = minor ? 0 : (list.length ? Math.round((open / list.length) * 100) : 100);
-    get("score-number").textContent = pct;
-    get("score-marker").style.left = pct + "%";
-    const state = get("score-state");
-    if (pct >= 70) {
-      get("score-label").textContent = "Good standing";
-      get("score-state-title").textContent = "Broad market access";
-      get("score-state-description").textContent = "This account can trade most open markets. Individual markets still restrict specific affiliations.";
-      state.className = "score-state";
-    } else if (pct >= 40) {
-      get("score-label").textContent = "Limited access";
-      get("score-state-title").textContent = "Some markets restricted";
-      get("score-state-description").textContent = "This account's declared affiliations restrict it from several open markets.";
-      state.className = "score-state warning";
-    } else {
-      get("score-label").textContent = "Narrow access";
-      get("score-state-title").textContent = "Most markets restricted";
-      get("score-state-description").textContent = "This account's declared affiliations restrict it from most open markets.";
-      state.className = "score-state banned";
-    }
-  } catch (e) { /* leave the audit-based score if the market list cannot load */ }
+// Score = share of the 8 markets ON THE MARKETS BOARD this account can
+// trade (minors: 0 - total ban). Mirrors the MARKET DATA in markets.html -
+// keep the two in sync. Same number as the markets-page sidebar.
+function renderAccessScore(affiliations, birthday) {
+  const ACCESS_BOARD = [
+    ["vt-athletics"],               // Next Virginia Tech game
+    [], [],                         // Simulated 5-minute index A + B
+    ["va-politician-household"],    // VA abortion amendment
+    ["va-politician-household"],    // VA congressional map
+    ["anthropic-staff"], ["anthropic-staff"], ["anthropic-staff"], // Opus 21/22/23
+  ];
+  const mine = (affiliations || []).map(a => String(a).toLowerCase());
+  const open = ACCESS_BOARD.filter(r => !r.some(x => mine.includes(String(x).toLowerCase()))).length;
+  // The backend age gate bars minors from every market, so their access is 0.
+  const minor = birthday && (Date.now() - new Date(birthday).getTime()) / (365.25 * 24 * 3600 * 1000) < 18;
+  const pct = minor ? 0 : Math.round((open / ACCESS_BOARD.length) * 100);
+  get("score-number").textContent = pct;
+  get("score-marker").style.left = pct + "%";
+  const state = get("score-state");
+  if (pct === 100) {
+    get("score-label").textContent = "Good standing";
+    get("score-state-title").textContent = "Full market access";
+    get("score-state-description").textContent = "This account can trade every market on the board.";
+    state.className = "score-state";
+  } else if (pct === 0) {
+    get("score-label").textContent = "No market access";
+    get("score-state-title").textContent = "Banned from every market";
+    get("score-state-description").textContent = minor
+      ? "Accounts under 18 cannot trade."
+      : "This account's declared affiliations restrict it from every market on the board.";
+    state.className = "score-state banned";
+  } else {
+    get("score-label").textContent = "Restricted access";
+    get("score-state-title").textContent = "Some markets restricted";
+    get("score-state-description").textContent = "This account can trade " + open + " of " + ACCESS_BOARD.length + " markets. Its declared affiliations restrict the rest.";
+    state.className = "score-state warning";
+  }
 }
 
 function getUserAuditLog() {
@@ -1590,238 +1656,11 @@ function getUserAuditLog() {
  *
  * This is NOT a financial credit score.
  *
- * It represents platform trust/access standing.
- *
- * Normal losses do not hurt the score.
- * Enforcement violations do.
+ * It is the share of board markets this account can trade,
+ * from declared affiliations and the age gate.
+ * Audit events never move it.
  * ============================================================
  */
-
-function scoreImpact(entry) {
-
-  /*
-   * Explicit impact stored by the
-   * backend wins if available.
-   */
-
-  if (
-    Number.isFinite(
-      Number(entry.scoreImpact)
-    )
-  ) {
-
-    return Number(
-      entry.scoreImpact
-    );
-
-  }
-
-
-  /*
-   * Otherwise derive from enforcement
-   * result for the frontend prototype.
-   */
-
-  if (
-    entry.reason === "IDENTITY_REVOKED"
-  ) {
-
-    return -100;
-
-  }
-
-
-  if (
-    entry.reason === "NONCE_REPLAY" ||
-    entry.reason === "SIGNATURE_INVALID"
-  ) {
-
-    return -30;
-
-  }
-
-
-  if (
-    entry.status === "BLOCKED"
-  ) {
-
-    return -15;
-
-  }
-
-
-  if (
-    entry.status === "FLAGGED"
-  ) {
-
-    return -5;
-
-  }
-
-
-  return 0;
-
-}
-
-
-
-function calculateScore(entries) {
-
-  let score =
-    100;
-
-
-  entries.forEach(entry => {
-
-    score +=
-      scoreImpact(entry);
-
-  });
-
-
-  return Math.max(
-    0,
-    Math.min(
-      100,
-      score
-    )
-  );
-
-}
-
-
-
-function renderScore(entries) {
-
-  // Demo decision: the market access score is a STATIC 100. It is a policy
-  // display, not a live computation - enforcement events still show in the
-  // ledger below, they just never move this number.
-  const score =
-    100;
-
-
-  get("score-number").textContent =
-    score;
-
-
-  get("score-marker").style.left =
-    score + "%";
-
-
-  const state =
-    get("score-state");
-
-
-  /*
-   * GOOD
-   */
-
-  if (score >= 70) {
-
-    get("score-label").textContent =
-      "Good standing";
-
-
-    get("score-state-title").textContent =
-      "Full account-level access";
-
-
-    get("score-state-description").textContent =
-      "No account-wide restriction is active. Individual markets may still restrict specific affiliations.";
-
-
-    state.className =
-      "score-state";
-
-  }
-
-
-  /*
-   * WARNING
-   */
-
-  else if (score >= 40) {
-
-    get("score-label").textContent =
-      "Warning";
-
-
-    get("score-state-title").textContent =
-      "Account under increased review";
-
-
-    get("score-state-description").textContent =
-      "Recent enforcement events reduced this account's standing. Trades may require additional review.";
-
-
-    state.className =
-      "score-state warning";
-
-  }
-
-
-  /*
-   * RESTRICTED
-   */
-
-  else {
-
-    get("score-label").textContent =
-      "Restricted";
-
-
-    get("score-state-title").textContent =
-      "Market access suspended";
-
-
-    get("score-state-description").textContent =
-      "Account-level access has been suspended because the enforcement threshold was reached.";
-
-
-    state.className =
-      "score-state banned";
-
-  }
-
-
-  /*
-   * Store state so markets.html can
-   * enforce account-level suspension.
-   */
-
-  localStorage.setItem(
-    "marketAccessScore:" +
-    user.email.toLowerCase(),
-    score
-  );
-
-}
-
-
-
-/*
- * ============================================================
- * MONEY
- * ============================================================
- */
-
-function money(value) {
-
-  const number =
-    Number(value || 0);
-
-
-  return (
-    number < 0
-      ? "-$"
-      : "$"
-  ) +
-  Math.abs(number)
-    .toFixed(2);
-
-}
-
-
 
 /*
  * ============================================================
@@ -1841,11 +1680,6 @@ function renderAudit() {
       );
 
 
-  renderScore(
-    entries
-  );
-
-
   get("audit-count").textContent =
     entries.length +
     (
@@ -1860,11 +1694,25 @@ function renderAudit() {
    * Successful/open transactions only.
    */
 
+  // Net contracts per market+outcome across the whole chain: a position
+  // whose close row has landed no longer counts as committed money.
+  const nets = {};
+  for (const entry of entries) {
+    if (!entry.marketId || !entry.outcome) continue;
+    const k = entry.marketId + "|" + entry.outcome;
+    nets[k] = (nets[k] || 0) + (Number(entry.cost) > 0 ? 1 : -1) * Number(entry.contracts || 0);
+  }
+
   const committed =
     entries
       .filter(
         entry =>
-          entry.status !== "BLOCKED"
+          entry.status !== "BLOCKED" &&
+          (Number(entry.cost) > 0
+            // a buy whose position is fully closed is no longer committed
+            ? !(entry.marketId && (nets[entry.marketId + "|" + entry.outcome] || 0) <= 0)
+            // refunds (no market id) still subtract; close rows are handled by the buy exclusion
+            : !entry.marketId)
       )
       .reduce(
         (total,entry) =>
@@ -1946,10 +1794,6 @@ function renderAudit() {
       .map(entry => {
 
 
-        const impact =
-          scoreImpact(entry);
-
-
         const financialClass =
           Number(entry.realizedProfit) > 0
             ? "positive"
@@ -1965,7 +1809,9 @@ function renderAudit() {
               ? "warning"
               : entry.status === "CANCELLED"
                 ? "cancelled"
-                : "allowed";
+                : entry.status === "CLOSED"
+                  ? "closed"
+                  : "allowed";
 
 
         const date =
@@ -2052,6 +1898,29 @@ function renderAudit() {
 
               </div>
 
+              ${
+                entry.livePrice != null &&
+                entry.netContracts > 0
+
+              ? `
+              <div class="audit-value">
+
+                <span>
+                  Live price
+                </span>
+
+                <strong>
+                  ${
+                    Math.round(entry.livePrice * 100)
+                  }&cent;
+                </strong>
+
+              </div>
+              `
+
+              : ""
+              }
+
 
               <div class="audit-value">
 
@@ -2084,6 +1953,34 @@ function renderAudit() {
               </span>
 
             </div>
+
+            ${
+              entry.closable &&
+              entry.netContracts > 0 &&
+              Number(entry.cost) > 0
+
+            ? `
+            <div class="audit-close">
+
+              <button
+                class="close-position-btn"
+                type="button"
+                data-market="${entry.marketId}"
+                data-outcome="${entry.outcome}"
+                data-contracts="${entry.netContracts}"
+              >
+                Close position &middot; sell all ${entry.netContracts} contracts${
+                  entry.livePrice != null
+                    ? " at ~" + Math.round(entry.livePrice * 100) + "&cent;"
+                    : ""
+                }
+              </button>
+
+            </div>
+            `
+
+            : ""
+            }
 
 
 
@@ -2152,7 +2049,7 @@ renderAudit();
 
 // Real pipeline trades live in Supabase, never in localStorage - pull this
 // identity's decisions from the audit API and fold them into the same view.
-(async () => {
+async function pullServerAudit() {
   if (typeof traderSession === "undefined" || !traderSession || !traderSession.agentId) return;
   try {
     const r = await fetch("/api/audit?agentId=" + encodeURIComponent(traderSession.agentId));
@@ -2161,17 +2058,133 @@ renderAudit();
     if (!Array.isArray(rows)) return;
     window.__serverAuditEntries = rows.map(d => ({
       timestamp: d.timestamp,
-      status: Number(d.amount) < 0 ? "CANCELLED" : String(d.decision || "").toUpperCase(),
+      status: Number(d.amount) < 0
+        ? ((Array.isArray(d.reasons) ? d.reasons.join(" ") : "").includes("Position closed") ? "CLOSED" : "CANCELLED")
+        : String(d.decision || "").toUpperCase(),
       cost: Number(d.amount || 0),
       contracts: d.contracts ?? 0,
       realizedProfit: 0,
       market: d.marketSubject || "Trade " + String(d.tradeId || "").slice(0, 8),
-      side: d.outcome ? "buy " + String(d.outcome) : null,
+      marketId: d.marketId || null,
+      outcome: d.outcome || null,
+      side: d.outcome ? (Number(d.amount) < 0 ? "sell " : "buy ") + String(d.outcome) : null,
       category: (Array.isArray(d.reasons) ? d.reasons : []).join(" · ") || null,
     }));
-    renderAudit();
+    await refreshLiveMarks();
+    window.__lastAuditSync = Date.now();
+    renderAuditUpdated();
   } catch (e) { /* leave local view as-is */ }
-})();
+}
+
+// The little "updated Xs ago" stamp under Account activity: ticks every
+// second off the last successful chain pull.
+function renderAuditUpdated() {
+  const el = get("audit-updated");
+  if (!el) return;
+  if (!window.__lastAuditSync) { el.textContent = ""; return; }
+  const s = Math.max(0, Math.round((Date.now() - window.__lastAuditSync) / 1000));
+  el.textContent = " \u00b7 updated " + (s < 60 ? s + "s" : Math.floor(s / 60) + "m") + " ago";
+}
+setInterval(renderAuditUpdated, 1000);
+
+// Live marks: open positions re-price off the SAME quote the market card
+// displays, every 10 seconds in step with the walk's buckets. A position
+// whose close row has landed keeps the number the close settled at.
+const CLOSE_PRICE_SOURCES = [
+  { prefix: "Simulated 5-minute index B", kind: "sim5b" },
+  { prefix: "Simulated 5-minute index", kind: "sim5" },
+];
+
+async function refreshLiveMarks() {
+  const entries = window.__serverAuditEntries;
+  if (!Array.isArray(entries)) return;
+
+  // Net contracts, gross buys, and close proceeds per market+outcome.
+  const nets = {};
+  for (const e of entries) {
+    if (!e.marketId || !e.outcome) continue;
+    const k = e.marketId + "|" + e.outcome;
+    const agg = nets[k] || (nets[k] = { contracts: 0, bought: 0, proceeds: 0 });
+    if (Number(e.cost) > 0) { agg.contracts += Number(e.contracts || 0); agg.bought += Number(e.contracts || 0); }
+    else { agg.contracts -= Number(e.contracts || 0); agg.proceeds += Math.abs(Number(e.cost)); }
+  }
+
+  // Only the newest buy row per market+outcome carries the close button -
+  // the close always sells the whole net position, so one control, not one per row.
+  const latestBuy = {};
+  for (const e of entries) {
+    if (!(Number(e.cost) > 0 && e.marketId && e.outcome)) continue;
+    const k = e.marketId + "|" + e.outcome;
+    if (!latestBuy[k] || new Date(e.timestamp) > new Date(latestBuy[k])) latestBuy[k] = e.timestamp;
+  }
+
+  const priceCache = {};
+  for (const e of entries) {
+    if (!(Number(e.cost) > 0 && Number(e.contracts) > 0 && e.marketId)) { e.netContracts = 0; continue; }
+    const agg = nets[e.marketId + "|" + e.outcome];
+    e.netContracts = agg.contracts;
+    const src = CLOSE_PRICE_SOURCES.find(x => (e.market || "").startsWith(x.prefix));
+    e.closable = Boolean(src) && latestBuy[e.marketId + "|" + e.outcome] === e.timestamp;
+    if (agg.contracts <= 0) {
+      // Fully closed: this row's share of the exit proceeds minus its cost.
+      e.realizedProfit = (Number(e.contracts) / (agg.bought || 1)) * agg.proceeds - Number(e.cost);
+      continue;
+    }
+    if (!src) continue; // no live quote source for this market in the demo
+    try {
+      if (!(src.kind in priceCache)) {
+        const r = await fetch("/api/odds/auto/" + src.kind);
+        priceCache[src.kind] = r.ok ? await r.json() : null;
+      }
+      const odds = priceCache[src.kind];
+      const up = odds && (odds.outcomes || []).find(o => o.name === "Up");
+      if (!up) continue;
+      const unit = e.outcome === "B" ? 1 - Number(up.price) : Number(up.price);
+      e.livePrice = unit;
+      e.realizedProfit = Number(e.contracts) * unit - Number(e.cost);
+    } catch (err) { /* keep the last good mark */ }
+  }
+  renderAudit();
+}
+
+pullServerAudit();
+setInterval(pullServerAudit, 10_000);
+
+// The close button signs exactly like a trade: same key, same canonical
+// payload discipline, just the exit shape.
+get("audit-log").addEventListener("click", async ev => {
+  const btn = ev.target.closest(".close-position-btn");
+  if (!btn || btn.disabled) return;
+  if (typeof traderSession === "undefined" || !traderSession || !traderSession.keyPem) return;
+  const oldLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Closing…";
+  try {
+    const close = {
+      closeId: crypto.randomUUID(),
+      agentId: traderSession.agentId,
+      marketId: btn.dataset.market,
+      outcome: btn.dataset.outcome,
+      contracts: Number(btn.dataset.contracts),
+      timestamp: new Date().toISOString(),
+    };
+    const key = await importIdentityKey(traderSession.keyPem);
+    const sig = await signPayload(key, new TextEncoder().encode(canonicalClosePayload(close)));
+    const r = await fetch("/api/positions/close", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...close, signature: bufferToBase64(sig) }),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || "Close failed.");
+    await pullServerAudit();  // the close row lands in the log
+    renderBankingProfile();   // cash picks up the refund
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+    alert(e.message || "Close failed.");
+  }
+});
 
 
 

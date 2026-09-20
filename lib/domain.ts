@@ -4,6 +4,7 @@ export type DecisionKind = "allowed" | "blocked" | "flagged";
 export interface AgentIdentity { agentId: string; walletId: string; affiliations: string[]; publicKey: string; registeredAt: string; email?: string | null; birthday?: string | null; role?: string | null; }
 export interface Market { marketId: string; subject: string; restrictedAffiliations: string[]; pool: { outcomeA: number; outcomeB: number }; status: "open" | "resolved"; materialEventAt: string | null; }
 export interface TradeRequest { tradeId: string; agentId: string; marketId: string; outcome: Outcome; amount: number; nonce: string; timestamp: string; signature: string; }
+export interface CloseRequest { closeId: string; agentId: string; marketId: string; outcome: Outcome; contracts: number; timestamp: string; signature: string; }
 export interface TradeDecision { tradeId: string; decision: DecisionKind; reasons: string[]; timestamp: string; hashPrev: string | null; hash: string; agentId?: string | null; marketId?: string | null; marketSubject?: string | null; amount?: number | null; outcome?: string | null; contracts?: number | null; }
 
 export interface TradeStore {
