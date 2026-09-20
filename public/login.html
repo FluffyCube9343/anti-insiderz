@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<head><script src="demo-session.js"></script>
   <meta charset="utf-8" />
   <meta content="width=device-width,initial-scale=1" name="viewport" />
 
@@ -102,6 +102,40 @@
 
     </header>
 
+
+    <!-- TRADER KEY SIGN-IN (real identity, verified client-side) -->
+    <section class="form card" id="key-login" style="margin-bottom:24px">
+
+      <span class="eyebrow">
+        Live backend
+      </span>
+
+      <h1 class="display">
+        Sign in with your trader key.
+      </h1>
+
+      <p class="muted">
+        Uses your ANS identity. The private key is verified against the
+        registered public key in this page and never leaves your browser.
+      </p>
+
+      <label for="key-agent">
+        Trader agent UUID
+      </label>
+      <input id="key-agent" type="text" spellcheck="false" placeholder="50babc18-b9e6-44a9-81aa-86c657cec956">
+
+      <label for="key-file" style="margin-top:14px">
+        Identity private key (.key/.pem from ans-cli)
+      </label>
+      <input id="key-file" type="file" accept=".key,.pem" style="border:0;padding-left:0">
+
+      <button class="button" id="key-submit" onclick="keyLogin()" style="margin-top:18px">
+        Verify key &amp; sign in
+      </button>
+
+      <p class="muted" id="key-status" role="status" aria-live="polite" style="margin-top:12px"></p>
+
+    </section>
 
     <!-- PROFILE / SIGNUP SCREEN -->
     <section class="form card" id="profile">
@@ -257,6 +291,46 @@
   </main>
 
 
+
+  <script src="sign-trade.js"></script>
+  <script>
+
+    "use strict";
+
+    async function keyLogin() {
+      const status = document.getElementById("key-status");
+      const agentId = document.getElementById("key-agent").value.trim();
+      const file = document.getElementById("key-file").files[0];
+      if (!agentId) { status.textContent = "Enter your trader agent UUID."; return; }
+      if (!file) { status.textContent = "Choose your identity key file."; return; }
+      document.getElementById("key-submit").disabled = true;
+      status.textContent = "Checking the registered public key...";
+      try {
+        const r = await fetch("/api/agents/" + encodeURIComponent(agentId));
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok) { status.textContent = (body.error || ("HTTP " + r.status)); return; }
+        const keyPem = await file.text();
+        const priv = await importIdentityKey(keyPem);
+        const pub = await importPublicKey(body.publicKey);
+        // Proof of possession: sign a random nonce with the private key,
+        // verify it against the registered public key. No server round-trip.
+        const nonce = crypto.getRandomValues(new Uint8Array(32));
+        const params = sigParams(priv);
+        const sig = await crypto.subtle.sign(params, priv, nonce);
+        const ok = await crypto.subtle.verify(params, pub, sig, nonce);
+        if (!ok) { status.textContent = "Key does not match the registered public key for that agent."; return; }
+        sessionStorage.setItem("traderSession", JSON.stringify({ agentId, keyPem, affiliations: body.affiliations || [] }));
+        if (window.DemoSession) window.DemoSession.rememberTrader(agentId, keyPem); // remember the ANS login like the demo one
+        status.textContent = "Verified. Opening markets...";
+        location.replace("markets.html");
+      } catch (e) {
+        status.textContent = "Sign-in failed: " + (e && e.message ? e.message : e);
+      } finally {
+        document.getElementById("key-submit").disabled = false;
+      }
+    }
+
+  </script>
 
   <script>
 
@@ -418,6 +492,9 @@
           "verified",
           "yes"
         );
+
+        const remembered = window.DemoSession && window.DemoSession.remember();
+        if (!remembered) message.textContent = "Verified for this tab. Browser storage is unavailable, so this login cannot be remembered.";
 
 
         /*

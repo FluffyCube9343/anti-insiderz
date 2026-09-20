@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 
-<head>
+<head><script src="demo-session.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
@@ -814,7 +814,7 @@
 
 
   <!-- MARKET PROPOSAL -->
-   
+
 
   <section
     class="card"
@@ -1149,13 +1149,55 @@
     Reconfirm identity & continue →
   </button>
 
+
+  <details class="access-explainer" id="real-box" style="border-color:var(--accent)">
+    <summary><strong>Real signed order · live backend</strong></summary>
+    <p>This bypasses the demo simulation. The order is signed in this page with a real ANS identity key and submitted to <code>/api/trades</code>, where the actual gates (signature, identity, affiliation, solvency, timing) decide it. The key never leaves the browser.</p>
+    <label for="real-agent">Trader identity</label>
+    <select id="real-agent" style="width:100%;padding:11px;background:var(--page);color:var(--ink);border:1px solid var(--line);font:inherit">
+      <option value="50babc18-b9e6-44a9-81aa-86c657cec956">trader1</option>
+      <option value="80dd1770-b27e-4f74-9c77-ee768120ad2b">trader2</option>
+      <option value="9a71ee03-316c-4c3c-86e1-7e8f68cdffa3">trader3</option>
+      <option value="939b792e-9c8f-445c-920c-618179a76c93">trader4 (Dario · anthropic-staff)</option>
+    </select>
+    <label for="real-key">Identity private key (the .key/.pem ans-cli generated for that trader)</label>
+    <input id="real-key" type="file" accept=".key,.pem" style="border:0;padding-left:0">
+    <label for="real-market">Market UUID (locked to the market you opened)</label>
+    <input id="real-market" type="text" spellcheck="false" readonly placeholder="no backend market linked to this card" style="opacity:0.75;cursor:not-allowed">
+    <button class="button" id="real-submit" onclick="placeRealOrder()" style="margin-top:14px">Sign &amp; place real order</button>
+    <div class="clearance" id="real-result" role="status" aria-live="polite" style="margin-top:12px"></div>
+  </details>
+
 </section>
 
 
 
+<script src="sign-trade.js"></script>
 <script>
 
 "use strict";
+const traderSession = JSON.parse(sessionStorage.getItem("traderSession") || "null");
+if (traderSession) {
+  // Signed-in trader: bind the real-order section to their identity, no per-trade key picker.
+  document.getElementById("real-agent").value = traderSession.agentId;
+  document.getElementById("real-agent").disabled = true;
+  document.getElementById("real-key").style.display = "none";
+  document.getElementById("real-key").previousElementSibling.style.display = "none";
+  const note = document.createElement("p");
+  note.className = "muted";
+  note.textContent = "Signed in as " + traderSession.agentId.slice(0, 8) + "… · key held in this tab only";
+  document.getElementById("real-box").appendChild(note);
+  // Real identity signed in: retire the simulation so no fake CLEARED can be misread.
+  for (const id of ["review-email", "review-code", "clearance", "continue"]) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  }
+  for (const el of document.querySelectorAll('label[for="review-email"], label[for="review-code"], .access-explainer:not(#real-box), #ticket p.muted')) {
+    el.style.display = "none";
+  }
+  document.getElementById("real-box").open = true;
+}
+
 
 
 /*
@@ -1195,9 +1237,11 @@ const storedUser =
  * return to login.
  */
 
+// Trader-key sign-in bypasses the mock profile gate entirely.
 if (
-  !storedUser ||
-  sessionStorage.getItem("verified") !== "yes"
+  !sessionStorage.getItem("traderSession") &&
+  (!storedUser ||
+    sessionStorage.getItem("verified") !== "yes")
 ) {
 
   location.replace("login.html");
@@ -1209,8 +1253,31 @@ if (
  * Convert stored JSON back into a JS object.
  */
 
+// Trader-key sessions have no mock profile - synthesize one so the UI renders.
 const user =
-  JSON.parse(storedUser);
+  JSON.parse(storedUser) ||
+  (traderSession && {
+    name: "Trader " + traderSession.agentId.slice(0, 8),
+    email: "",
+    birthday: "",
+    role: "Trader"
+  });
+
+// Key sessions have no mock profile, so pull the real declared affiliations
+// from the registry route - the review gate must judge the same identity the backend does.
+let traderAffiliations = [];
+if (traderSession) {
+  (async () => {
+    try {
+      const r = await fetch("/api/agents/" + encodeURIComponent(traderSession.agentId));
+      if (!r.ok) return;
+      const b = await r.json();
+      traderAffiliations = Array.isArray(b.affiliations) ? b.affiliations : [];
+      document.getElementById("sidebar-role").textContent = traderAffiliations.join(", ") || "none declared";
+      renderList();
+    } catch (e) { /* the backend gate still decides regardless */ }
+  })();
+}
 
 
 
@@ -1248,23 +1315,23 @@ function isGovernmentUser() {
  */
 
 
-get("account-name").textContent =
+document.getElementById("account-name").textContent =
   user.name;
 
 
-get("sidebar-name").textContent =
+document.getElementById("sidebar-name").textContent =
   user.name;
 
 
-get("sidebar-role").textContent =
+document.getElementById("sidebar-role").textContent =
   user.role;
 
 
-get("reconfirm-email").textContent =
+document.getElementById("reconfirm-email").textContent =
   user.email;
 
 
-get("dynamic-role").textContent =
+document.getElementById("dynamic-role").textContent =
   user.role;
 
 
@@ -1289,7 +1356,7 @@ document
 
 if (isGovernmentUser()) {
 
-  get("account-description").textContent =
+  document.getElementById("account-description").textContent =
     user.role +
     " · politics and government-policy markets may be restricted for this profile.";
 
@@ -1297,7 +1364,7 @@ if (isGovernmentUser()) {
 
 else {
 
-  get("account-description").textContent =
+  document.getElementById("account-description").textContent =
     user.role +
     " · market access is evaluated per trade.";
 
@@ -1312,6 +1379,12 @@ else {
  */
 
 
+// Backend market UUIDs per UI market (blank = no live market wired yet).
+const MARKET_UUIDS = {
+  0: "10000000-0000-4000-8000-000000000001", // Next VT game
+  2: "10000000-0000-4000-8000-000000000002", // VA abortion amendment
+  4: "10000000-0000-4000-8000-000000000004", // Claude Opus Sep 21
+};
 const markets = [
 
   {
@@ -1324,6 +1397,9 @@ const markets = [
 
     restriction:
       null,
+
+    restrictedAffiliations:
+      ["vt-athletics"],
 
     auto:
       "vt0",
@@ -1347,6 +1423,9 @@ const markets = [
     restriction:
       null,
 
+    restrictedAffiliations:
+      ["vt-athletics"],
+
     auto:
       "vt1",
 
@@ -1368,6 +1447,9 @@ const markets = [
 
     restriction:
       "government",
+
+    restrictedAffiliations:
+      ["va-politician-household"],
 
     slug:
       "will-the-virginia-abortion-protection-amendment-pass",
@@ -1391,6 +1473,9 @@ const markets = [
     restriction:
       "government",
 
+    restrictedAffiliations:
+      ["va-politician-household"],
+
     slug:
       "new-virginia-congressional-map-used-in-the-midterms",
 
@@ -1412,6 +1497,9 @@ const markets = [
 
     restriction:
       null,
+
+    restrictedAffiliations:
+      ["anthropic-staff"],
 
     slug:
       "will-the-next-claude-opus-model-be-released-on-september-21-2026",
@@ -1435,6 +1523,9 @@ const markets = [
     restriction:
       null,
 
+    restrictedAffiliations:
+      ["anthropic-staff"],
+
     slug:
       "will-the-next-claude-opus-model-be-released-on-september-22-2026",
 
@@ -1457,6 +1548,9 @@ const markets = [
     restriction:
       null,
 
+    restrictedAffiliations:
+      ["anthropic-staff"],
+
     slug:
       "will-the-next-claude-opus-model-be-released-on-september-23-2026",
 
@@ -1478,17 +1572,16 @@ const markets = [
  */
 
 
+function currentUserAffiliations() {
+  if (traderSession) return traderAffiliations;
+  if (isGovernmentUser()) return ["va-politician-household"];
+  return [];
+}
+
+// Returns the matched restricted affiliation, or null - every market type is checked now.
 function userBlockedFromMarket(market) {
-
-  if (market.restriction === "government") {
-
-    return isGovernmentUser();
-
-  }
-
-
-  return false;
-
+  const mine = currentUserAffiliations();
+  return (market.restrictedAffiliations || []).find(r => mine.some(a => String(a).toLowerCase() === r.toLowerCase())) || null;
 }
 
 
@@ -1847,6 +1940,9 @@ function openTicket(i) {
     false;
 
 
+  get("real-market").value = MARKET_UUIDS[i] || "";
+  get("real-result").textContent = "";
+  get("real-result").className = "clearance";
   selectSide("yes");
 
 
@@ -2190,7 +2286,7 @@ function clearTrade() {
       "BLOCKED · Identity reconfirmed. " +
       user.name +
       "'s " +
-      user.role +
+      blocked +
       " affiliation matches this market's restrictions. " +
       "No trade permitted. The account remains in good standing.";
 
@@ -2526,7 +2622,7 @@ async function refreshLiveOdds() {
     const m of markets
   ) {
 
-    if (!m.slug)
+    if (!m.slug && !m.auto)
       continue;
 
 
@@ -2673,6 +2769,43 @@ setInterval(
 
   1000
 );
+
+async function placeRealOrder() {
+  const out = get("real-result");
+  const marketId = get("real-market").value.trim();
+  const amount = Number(get("amount").value);
+  const file = get("real-key").files[0];
+  if (!marketId) { out.className = "clearance blocked"; out.textContent = "This demo card is not linked to a backend market, so there is nothing real to sign against."; return; }
+  if (!traderSession && !file) { out.className = "clearance blocked"; out.textContent = "Choose the trader's identity key file first."; return; }
+  if (!Number.isFinite(amount) || amount <= 0) { out.className = "clearance blocked"; out.textContent = "Enter a positive amount."; return; }
+  get("real-submit").disabled = true;
+  out.className = "clearance";
+  out.textContent = "Signing in this page and submitting to /api/trades...";
+  try {
+    const keyPem = traderSession ? traderSession.keyPem : await file.text();
+    const { status, body } = await signAndSubmitTrade({
+      agentId: traderSession ? traderSession.agentId : get("real-agent").value,
+      marketId,
+      outcome: side === "yes" ? "A" : "B",
+      amount,
+      keyPem,
+    });
+    if (body && body.decision) {
+      const blocked = body.decision !== "allowed";
+      out.className = "clearance " + (blocked ? "blocked" : "");
+      const reasons = (body.reasons || []).join(" ") || "no reasons returned";
+      out.textContent = body.decision.toUpperCase() + " · " + reasons + (body.hash ? " · audit hash " + body.hash.slice(0, 12) + "…" : "");
+    } else {
+      out.className = "clearance blocked";
+      out.textContent = "HTTP " + status + " · " + (body.error || JSON.stringify(body));
+    }
+  } catch (e) {
+    out.className = "clearance blocked";
+    out.textContent = "Signing/submit failed: " + (e && e.message ? e.message : e);
+  } finally {
+    get("real-submit").disabled = false;
+  }
+}
 
 </script>
 

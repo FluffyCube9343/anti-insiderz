@@ -2,7 +2,7 @@
 
 <html lang="en">
 
-<head>
+<head><script src="demo-session.js"></script><script src="bank-state.js"></script>
 
 <meta charset="utf-8">
 
@@ -20,7 +20,9 @@
 
 <style>
 
-.profile-layout {
+[hidden] { display: none !important; }
+
+  .profile-layout {
   display:grid;
   grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);
   gap:22px;
@@ -652,7 +654,7 @@
 
 
 <main class="profile-layout">
-    
+
 
 
 <!-- ==========================================================
@@ -697,7 +699,7 @@
 
   <div class="row">
     <span>Cash balance</span>
-    <b id="profile-cash">$500</b> <!-- pulled from bank account but for now will be $500-->
+    <b id="profile-cash">-</b>
   </div>
 
 
@@ -1209,8 +1211,9 @@ const storedUser =
 
 
 if (
-  !storedUser ||
-  sessionStorage.getItem("verified") !== "yes"
+  !sessionStorage.getItem("traderSession") &&
+  (!storedUser ||
+    sessionStorage.getItem("verified") !== "yes")
 ) {
 
   location.replace("login.html");
@@ -1222,8 +1225,21 @@ if (
 }
 
 
+const traderSession =
+  JSON.parse(
+    sessionStorage.getItem("traderSession") || "null"
+  );
+
+
+// Key sessions have no mock profile - stand in a blank one until the registry record loads.
 const user =
-  JSON.parse(storedUser);
+  JSON.parse(storedUser) ||
+  (traderSession && {
+    name: "Trader " + traderSession.agentId.slice(0, 8),
+    email: "",
+    birthday: "",
+    role: ""
+  });
 
 
 
@@ -1324,6 +1340,24 @@ get("profile-affiliation").textContent =
     user.role
   );
 
+if (traderSession) {
+  // Overwrite the placeholders with the real registry record for this identity.
+  (async () => {
+    try {
+      const r = await fetch("/api/agents/" + encodeURIComponent(traderSession.agentId));
+      if (!r.ok) throw new Error("registry lookup failed");
+      const b = await r.json();
+      get("profile-email").textContent = b.email || "Not provided";
+      get("profile-role").textContent = b.role || "Not provided";
+      get("profile-birthday").textContent = formatBirthday(b.birthday || "");
+      get("profile-affiliation").textContent =
+        (Array.isArray(b.affiliations) && b.affiliations.length && b.affiliations.join(", ")) || "None declared";
+    } catch (e) {
+      get("profile-affiliation").textContent = "Registry lookup failed";
+    }
+  })();
+}
+
 
 
 /*
@@ -1353,6 +1387,82 @@ function getAuditLog() {
 }
 
 
+
+/*
+ * ============================================================
+ * BANKING STATE
+ * ============================================================
+ */
+
+function getBankAccount() {
+  return window.BankState.account(localStorage, user.email);
+}
+
+function renderBankingProfile() {
+
+  const account =
+    getBankAccount();
+
+
+  const cash =
+    get("profile-cash");
+
+  const connected = Boolean(account && account.connected === true);
+  get("bank-status").classList.toggle("connected", connected);
+  get("bank-status-text").textContent = connected ? "Account connected · Local demo" : "No account linked";
+  get("bank-status-text").setAttribute("role", "status");
+  get("bank-unlinked").hidden = connected;
+  get("bank-connected").hidden = !connected;
+  get("bank-link-description").textContent = connected ? "Your saved demo account is linked. The balance below is simulated local cash, not a verified bank balance." : "No account is linked to this profile. Link a demo account to show its simulated balance.";
+  get("bank-link-action").textContent = connected ? "Manage account" : "Link Bank Account";
+  if (connected) {
+    get("bank-account-name").textContent = account.name;
+    get("bank-account-number").textContent = account.type + " •••• " + account.last4;
+    get("bank-balance").textContent = money(account.balance);
+  }
+
+
+  /*
+   * ==========================================================
+   * NO BANK ACCOUNT LINKED
+   * ==========================================================
+   */
+
+  if (!connected) {
+    get("bank-account-name").textContent = "No account linked";
+    get("bank-account-number").textContent = "";
+    get("bank-balance").textContent = "—";
+
+    cash.textContent =
+      "— (no linked account)";
+
+
+    return;
+
+  }
+
+
+
+  /*
+   * ==========================================================
+   * LINKED NESSIE SANDBOX ACCOUNT
+   * ==========================================================
+   */
+
+  cash.textContent =
+    money(
+      account.balance
+    );
+
+}
+
+
+
+window.addEventListener("pageshow", renderBankingProfile);
+renderBankingProfile();
+window.addEventListener("storage", event => {
+  if (event.key === "bankAccount" || event.key === null) renderBankingProfile();
+});
 
 function getUserAuditLog() {
 

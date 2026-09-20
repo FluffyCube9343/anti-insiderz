@@ -7,3 +7,9 @@ coverage
 
 *.zip
 *.tsbuildinfo
+
+
+TODO.md
+
+.DS_Store
+__MACOSX/

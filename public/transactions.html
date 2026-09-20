@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<head><script src="demo-session.js"></script>
 
   <meta charset="UTF-8">
 
@@ -913,8 +913,9 @@ const storedUser =
 
 
 if (
-  !storedUser ||
-  sessionStorage.getItem("verified") !== "yes"
+  !sessionStorage.getItem("traderSession") &&
+  (!storedUser ||
+    sessionStorage.getItem("verified") !== "yes")
 ) {
 
   location.replace("login.html");
