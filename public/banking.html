@@ -1324,9 +1324,9 @@
             </h3>
 
             <p class="muted">
-              For now, this creates a local simulated checking
-              account. Later, the same connection flow can create
-              or retrieve the account through the Nessie API.
+              This creates a real sandbox checking account through
+              the Nessie API - balance and ledger come straight
+              from Capital One's sandbox.
             </p>
 
 
@@ -1371,7 +1371,7 @@
                 </span>
 
                 <span class="field-hint">
-                  Fake cash used while building the banking system.
+                  Starting balance for the sandbox account.
                 </span>
 
               </label>
@@ -1797,9 +1797,15 @@
       sessionStorage.getItem("verified");
 
 
+    const traderSession =
+      JSON.parse(
+        sessionStorage.getItem("traderSession") || "null"
+      );
+
+
     if (
-      !storedUser ||
-      verified !== "yes"
+      !traderSession &&
+      (!storedUser || verified !== "yes")
     ) {
 
       location.replace(
@@ -1813,8 +1819,54 @@
     }
 
 
+    // Trader key sessions get a synthetic owner id so bank accounts key
+    // per trader instead of per mock email. The id must stay stable -
+    // BankState matches accounts by it.
     const user =
-      JSON.parse(storedUser);
+      JSON.parse(storedUser) ||
+      (traderSession && {
+        name: "Trader " + traderSession.agentId.slice(0, 8),
+        email: "trader-" + traderSession.agentId + "@ans.local"
+      });
+
+
+    // Pretty up the display name once the registry record loads, and rebuild
+    // the local bank record from the durable wallet link when there is one.
+    if (traderSession) {
+      fetch("/api/agents/" + encodeURIComponent(traderSession.agentId))
+        .then(r => (r.ok ? r.json() : null))
+        .then(async a => {
+          if (!a) return;
+          if (a.fullName) user.name = a.fullName;
+          // wallet_id holds the real Nessie account - localStorage is only a cache.
+          if (!getBankAccount() && typeof a.walletId === "string" && a.walletId) {
+            try {
+              const res = await fetch("/api/banking?accountId=" + encodeURIComponent(a.walletId));
+              if (res.ok) {
+                const live = await res.json();
+                saveBankAccount({
+                  id: live.accountId,
+                  nessieId: live.accountId,
+                  customerId: live.customerId,
+                  owner: user.email,
+                  ownerName: user.name,
+                  provider: "Capital One Nessie",
+                  name: live.nickname || "Capital One Nessie Checking Account",
+                  type: live.type || "Checking",
+                  last4: String(live.accountNumber || live.accountId).slice(-4),
+                  balance: live.balance,
+                  currency: "USD",
+                  connected: true,
+                  live: true,
+                  createdAt: new Date().toISOString()
+                });
+              }
+            } catch (e) { /* leave disconnected */ }
+          }
+          renderBankAccount();
+        })
+        .catch(() => {});
+    }
 
 
 
@@ -1917,7 +1969,7 @@
      * =========================================================
      */
 
-    function connectBankAccount() {
+    async function connectBankAccount() {
 
       const startingBalance =
         Number(
@@ -1942,21 +1994,53 @@
       }
 
 
+      get("connection-result").textContent =
+        "Creating account with Nessie...";
 
-      const last4 =
-        String(
-          Math.floor(
-            1000 +
-            Math.random() * 9000
-          )
-        );
 
+      let created;
+
+      try {
+
+        const res =
+          await fetch("/api/banking", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: user.name,
+              type: accountType,
+              startingBalance: startingBalance,
+              agentId: traderSession ? traderSession.agentId : undefined
+            })
+          });
+
+        created = await res.json();
+
+        if (!res.ok)
+          throw new Error(created.error || "Nessie request failed.");
+
+      } catch (err) {
+
+        // No silent fake account - if Nessie is down, say so.
+        get("connection-result").textContent =
+          "Nessie connection failed: " +
+          (err && err.message ? err.message : "unknown error");
+
+        return;
+
+      }
 
 
       const account = {
 
         id:
-          crypto.randomUUID(),
+          created.accountId,
+
+        nessieId:
+          created.accountId,
+
+        customerId:
+          created.customerId,
 
         owner:
           user.email,
@@ -1968,21 +2052,25 @@
           "Capital One Nessie",
 
         name:
+          created.nickname ||
           "Capital One Nessie Checking Account",
 
         type:
-          accountType,
+          created.type || accountType,
 
         last4:
-          last4,
+          String(created.accountId).slice(-4),
 
         balance:
-          startingBalance,
+          created.balance,
 
         currency:
           "USD",
 
         connected:
+          true,
+
+        live:
           true,
 
         createdAt:
@@ -2004,10 +2092,10 @@
           "ACCOUNT_OPENED",
 
         description:
-          "Capital One Nessie Checking Account opened",
+          "Capital One Nessie Checking Account opened (live)",
 
         amount:
-          startingBalance,
+          account.balance,
 
         direction:
           "credit"
@@ -2017,7 +2105,7 @@
 
 
       get("connection-result").textContent =
-        "Account connected successfully.";
+        "Live Nessie account connected.";
 
 
 
@@ -2034,7 +2122,7 @@
      * =========================================================
      */
 
-    function disconnectBankAccount() {
+    async function disconnectBankAccount() {
 
       const account =
         getBankAccount();
@@ -2042,6 +2130,39 @@
 
       if (!account)
         return;
+
+
+      // A live account is deleted at Nessie and unlinked in Supabase, not just
+      // forgotten locally - the durable record must not outlive the account.
+      if (account.live && account.nessieId) {
+
+        try {
+
+          const res =
+            await fetch("/api/banking", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountId: account.nessieId })
+            });
+
+          if (!res.ok) {
+
+            const err = await res.json().catch(() => ({}));
+            get("connection-result").textContent =
+              "Could not delete the Nessie account: " + (err.error || "unknown error");
+            return;
+
+          }
+
+        } catch (err) {
+
+          get("connection-result").textContent =
+            "Could not reach the server to delete the account.";
+          return;
+
+        }
+
+      }
 
 
 
@@ -2070,6 +2191,55 @@
 
       renderBankAccount();
       renderActivity();
+
+    }
+
+
+
+    /*
+     * =========================================================
+     * LIVE BALANCE REFRESH
+     * =========================================================
+     */
+
+    async function refreshBankBalance() {
+
+      const account =
+        getBankAccount();
+
+
+      if (!account || !account.live || !account.nessieId)
+        return;
+
+
+      try {
+
+        const res =
+          await fetch(
+            "/api/banking?accountId=" +
+            encodeURIComponent(account.nessieId)
+          );
+
+        if (!res.ok)
+          return;
+
+        const data =
+          await res.json();
+
+        account.balance =
+          data.balance;
+
+        saveBankAccount(
+          account
+        );
+
+        renderBankAccount();
+
+      } catch (e) {
+
+        /* keep the cached balance on a failed refresh */
+
+      }
 
     }
 
@@ -2135,7 +2305,9 @@
 
 
       statusText.textContent =
-        "Account connected · Local demo";
+        account.live
+          ? "Account connected · Nessie live"
+          : "Account connected · Local demo";
 
 
       connectPanel.hidden =
@@ -2380,8 +2552,9 @@
 
     renderBankAccount();
     renderActivity();
+    refreshBankBalance();
 
-  window.addEventListener("pageshow", renderBankAccount);
+  window.addEventListener("pageshow", () => { renderBankAccount(); refreshBankBalance(); });
 window.addEventListener("storage", event => { if (event.key === "bankAccount" || event.key === null) renderBankAccount(); });
 </script>
 

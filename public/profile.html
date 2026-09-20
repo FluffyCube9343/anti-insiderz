@@ -890,23 +890,6 @@
   </div>
 
 
-  <div>
-    <span>
-        Bank Account
-    </span>
-    <hr>
-    <p>
-        Link a bank account to your profile to fund your ventures.
-    </p>
-    <hr>
-    <button class="button" type="submit">
-        Link Bank Account
-    </button>
-    <!-- red dot somewhere because bank account has not been linked-->
-     <p>
-        Other payment plans are available to you when you link a bank account. It is not required but recommended for a better experience.
-     </p>
-  </div>
 
 </section>
 
@@ -1236,7 +1219,7 @@ const user =
   JSON.parse(storedUser) ||
   (traderSession && {
     name: "Trader " + traderSession.agentId.slice(0, 8),
-    email: "",
+    email: "trader-" + traderSession.agentId + "@ans.local",
     birthday: "",
     role: ""
   });
@@ -1353,6 +1336,25 @@ if (traderSession) {
       if (!r.ok) throw new Error("registry lookup failed");
       const b = await r.json();
       if (b.fullName) get("profile-name").textContent = b.fullName;
+      // Rebuild the bank card from the durable wallet link when localStorage is cold.
+      if (!getBankAccount() && typeof b.walletId === "string" && b.walletId) {
+        try {
+          const br = await fetch("/api/banking?accountId=" + encodeURIComponent(b.walletId));
+          if (br.ok) {
+            const live = await br.json();
+            localStorage.setItem("bankAccount", JSON.stringify({
+              id: live.accountId, nessieId: live.accountId, customerId: live.customerId,
+              owner: user.email, ownerName: b.fullName || user.name,
+              provider: "Capital One Nessie",
+              name: live.nickname || "Capital One Nessie Checking Account",
+              type: live.type || "Checking", last4: String(live.accountNumber || live.accountId).slice(-4),
+              balance: live.balance, currency: "USD", connected: true, live: true,
+              createdAt: new Date().toISOString()
+            }));
+            renderBankingProfile();
+          }
+        } catch (e) { /* leave disconnected */ }
+      }
       get("profile-email").textContent = b.email || "Not provided";
       get("profile-role").textContent = b.role || "Not provided";
       get("profile-birthday").textContent = formatBirthday(b.birthday || "");
@@ -1416,12 +1418,10 @@ function renderBankingProfile() {
 
   const connected = Boolean(account && account.connected === true);
   get("bank-status").classList.toggle("connected", connected);
-  get("bank-status-text").textContent = connected ? "Account connected · Local demo" : "No account linked";
+  get("bank-status-text").textContent = connected ? (account.live ? "Account connected · Nessie live" : "Account connected · Local demo") : "No account linked";
   get("bank-status-text").setAttribute("role", "status");
   get("bank-unlinked").hidden = connected;
   get("bank-connected").hidden = !connected;
-  get("bank-link-description").textContent = connected ? "Your saved demo account is linked. The balance below is simulated local cash, not a verified bank balance." : "No account is linked to this profile. Link a demo account to show its simulated balance.";
-  get("bank-link-action").textContent = connected ? "Manage account" : "Link Bank Account";
   if (connected) {
     get("bank-account-name").textContent = account.name;
     get("bank-account-number").textContent = account.type + " •••• " + account.last4;

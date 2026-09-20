@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const store = new SupabaseTradeStore(c.supabaseUrl, c.supabaseServiceKey);
     const agent = await store.getAgent(id);
     if (!agent) return NextResponse.json({ error: "Unknown agent identity." }, { status: 404 });
-    return NextResponse.json({ agentId: agent.agentId, affiliations: agent.affiliations, publicKey: agent.publicKey, registeredAt: agent.registeredAt, email: agent.email ?? null, birthday: agent.birthday ?? null, role: agent.role ?? null, fullName: agent.fullName ?? null });
+    return NextResponse.json({ agentId: agent.agentId, affiliations: agent.affiliations, publicKey: agent.publicKey, registeredAt: agent.registeredAt, walletId: agent.walletId ?? null, email: agent.email ?? null, birthday: agent.birthday ?? null, role: agent.role ?? null, fullName: agent.fullName ?? null });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Unavailable" }, { status: 503 });
   }

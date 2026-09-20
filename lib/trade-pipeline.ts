@@ -37,7 +37,7 @@ export class TradePipeline {
     if (inWindow) reasons.push(`Timing flag: trade is within ${this.timingWindowMinutes} minutes of the material event.`);
     try { await this.payments.transfer(agent.walletId, this.poolAccountId, trade.amount, `Prediction-market trade ${trade.tradeId}`); await this.store.applyClearedTrade(trade.marketId, trade.outcome, trade.amount); }
     catch (error) { return block(`Trade execution failed after checks passed: ${error instanceof Error ? error.message : "unknown payment or pool error"}`); }
-    return this.record(trade.tradeId, inWindow ? "flagged" : "allowed", reasons.length ? reasons : ["All six checks passed; Nessie transfer cleared and market pool updated."]);
+    return this.record(trade.tradeId, inWindow ? "flagged" : "allowed", reasons.length ? reasons : [`All six checks passed; transfer cleared and market pool updated via the ${(this.payments as { rail?: string }).rail ?? "unknown"} rail.`]);
   }
 
   private record(tradeId: string, decision: DecisionKind, reasons: string[]) { return this.store.appendDecision({ tradeId, decision, reasons, timestamp: new Date().toISOString() }); }

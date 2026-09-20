@@ -16,10 +16,18 @@ export class SupabaseTradeStore implements TradeStore {
 }
 
 export class NessiePayments implements PaymentRail {
+  readonly rail = "nessie";
   constructor(private baseUrl: string, private key: string) {}
   private async request(path: string, init?: RequestInit) { const r = await fetch(`${this.baseUrl}${path}${path.includes("?") ? "&" : "?"}key=${encodeURIComponent(this.key)}`, init); if (!r.ok) throw new Error(`Nessie ${r.status}: ${await r.text()}`); return r; }
   async balance(accountId: string) { const data = await (await this.request(`/accounts/${encodeURIComponent(accountId)}`)).json() as { balance: number }; if (typeof data.balance !== "number") throw new Error("Nessie account response did not contain a numeric balance."); return data.balance; }
-  async transfer(fromAccountId: string, toAccountId: string, amount: number, description: string) { await this.request(`/accounts/${encodeURIComponent(fromAccountId)}/transfers`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ medium: "balance", payee_id: toAccountId, amount, description }) }); }
+  async transfer(fromAccountId: string, toAccountId: string, amount: number, description: string) {
+    // This Nessie deployment's transfers lane rejects payee_id (ledger-only), so
+    // account-to-account movement is a withdrawal + deposit pair. If the deposit
+    // fails after the withdrawal lands, the error surfaces and the trade blocks.
+    const base = { medium: "balance", transaction_date: new Date().toISOString().slice(0, 10), status: "completed", amount, description };
+    await this.request(`/accounts/${encodeURIComponent(fromAccountId)}/withdrawals`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(base) });
+    await this.request(`/accounts/${encodeURIComponent(toAccountId)}/deposits`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(base) });
+  }
 }
 
 export class AnsHttpRegistry implements AnsRegistry {
@@ -44,6 +52,7 @@ export class AnsHttpRegistry implements AnsRegistry {
 
 // Demo-only rail used when NESSIE_API_KEY is unset: every wallet looks funded and no money actually moves.
 export class DemoPayments implements PaymentRail {
+  readonly rail = "demo";
   async balance(_accountId: string) { return 1_000_000; }
   async transfer(_fromAccountId: string, _toAccountId: string, _amount: number, _description: string) { /* intentionally empty: demo mode */ }
 }
