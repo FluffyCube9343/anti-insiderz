@@ -1040,7 +1040,7 @@
     class="eyebrow"
     style="display:block;margin-top:18px"
   >
-    Test amount
+    Contracts to buy
   </label>
 
   <input
@@ -2047,13 +2047,20 @@ function selectSide(value) {
  */
 
 
+// Contracts are the user-facing input; every downstream consumer (simulated
+// checkout, real signed order) still speaks dollars, so convert once here.
+function currentCost() {
+  const price = side === "yes" ? markets[active].yes : 100 - markets[active].yes;
+  return Math.floor(Number(get("amount").value)) * price / 100;
+}
+
 function updateYield() {
 
-  const cents =
-    Math.round(
+  const contracts =
+    Math.floor(
       Number(
         get("amount").value
-      ) * 100
+      )
     );
 
 
@@ -2064,25 +2071,21 @@ function updateYield() {
 
 
   if (
-    !Number.isFinite(cents) ||
-    cents < price ||
-    cents > 1000000
+    !Number.isFinite(contracts) ||
+    contracts < 1 ||
+    contracts * price / 100 > 10000
   ) {
 
     get("yield").textContent =
-      "Enter enough for one contract, up to $10,000.";
+      "Enter at least 1 contract, up to $10,000 in cost.";
 
     return false;
 
   }
 
 
-  const contracts =
-    Math.floor(
-      cents / price
-    );
-
-
+  // Contracts are the input; each pays $1 if correct and costs the
+  // current quote, so the money follows from the contract count.
   const cost =
     contracts *
     price /
@@ -2171,16 +2174,11 @@ function updateYield() {
       <div class="payout-cell">
 
         <span class="payout-label">
-          Unspent budget
+          Return per contract
         </span>
 
         <strong class="payout-value">
-          ${
-            money(
-              cents / 100 -
-              cost
-            )
-          }
+          $1.00
         </strong>
 
       </div>
@@ -2396,9 +2394,7 @@ function clearTrade() {
      */
 
     amount:
-      Number(
-        get("amount").value
-      ),
+      currentCost(),
 
     /*
      * Eventually this should come directly
@@ -2806,11 +2802,11 @@ setInterval(
 async function placeRealOrder() {
   const out = get("real-result");
   const marketId = get("real-market").value.trim();
-  const amount = Number(get("amount").value);
+  const amount = currentCost();
   const file = get("real-key").files[0];
   if (!marketId) { out.className = "clearance blocked"; out.textContent = "This demo card is not linked to a backend market, so there is nothing real to sign against."; return; }
   if (!traderSession && !file) { out.className = "clearance blocked"; out.textContent = "Choose the trader's identity key file first."; return; }
-  if (!Number.isFinite(amount) || amount <= 0) { out.className = "clearance blocked"; out.textContent = "Enter a positive amount."; return; }
+  if (!Number.isFinite(amount) || amount <= 0) { out.className = "clearance blocked"; out.textContent = "Enter at least 1 contract."; return; }
   get("real-submit").disabled = true;
   out.className = "clearance";
   out.textContent = "Signing in this page and submitting to /api/trades...";

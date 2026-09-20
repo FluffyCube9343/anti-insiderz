@@ -9,7 +9,7 @@ export class SupabaseTradeStore implements TradeStore {
   async reserveNonce(nonce: string, tradeId: string): Promise<boolean> { const { error } = await this.db.from("trade_nonces").insert({ nonce, trade_id: tradeId }); return !error; }
   async applyClearedTrade(marketId: string, outcome: Outcome, amount: number) { const { error } = await this.db.rpc("apply_cleared_trade", { p_market_id: marketId, p_outcome: outcome, p_amount: amount }); if (error) throw error; }
   async appendDecision(input: Omit<TradeDecision, "hashPrev" | "hash">): Promise<TradeDecision> {
-    const { data, error } = await this.db.rpc("append_trade_decision", { p_trade_id: input.tradeId, p_decision: input.decision, p_reasons: input.reasons, p_timestamp: input.timestamp }).single(); if (error) throw error;
+    const { data, error } = await this.db.rpc("append_trade_decision", { p_trade_id: input.tradeId, p_decision: input.decision, p_reasons: input.reasons, p_timestamp: input.timestamp, p_agent_id: input.agentId ?? null, p_market_id: input.marketId ?? null, p_market_subject: input.marketSubject ?? null, p_amount: input.amount ?? null, p_outcome: input.outcome ?? null, p_contracts: input.contracts ?? null }).single(); if (error) throw error;
     const row = data as { trade_id: string; decision: TradeDecision["decision"]; reasons: string[]; created_at: string; hash_prev: string | null; hash: string };
     return { tradeId: row.trade_id, decision: row.decision, reasons: row.reasons, timestamp: row.created_at, hashPrev: row.hash_prev, hash: row.hash };
   }

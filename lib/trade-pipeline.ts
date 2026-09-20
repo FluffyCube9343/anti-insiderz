@@ -6,7 +6,7 @@ export class TradePipeline {
 
   async execute(trade: TradeRequest): Promise<TradeDecision> {
     const reasons: string[] = [];
-    const block = async (reason: string) => this.record(trade.tradeId, "blocked", [...reasons, reason]);
+    const block = async (reason: string) => this.record(trade, "blocked", [...reasons, reason]);
     const agent = await this.store.getAgent(trade.agentId);
     if (!agent) return block("Unknown agent identity.");
     // 1. Verify an exact canonical payload before touching replay state.
@@ -23,6 +23,11 @@ export class TradePipeline {
     // 4. A declared affiliation match is a hard exclusion - checked before any money movement.
     const forbidden = agent.affiliations.find(a => market.restrictedAffiliations.some(r => r.toLowerCase() === a.toLowerCase()));
     if (forbidden) return block(`Affiliation check blocked trade: agent is affiliated with restricted party \"${forbidden}\".`);
+    // Position size in whole contracts, priced off the pre-trade pool share
+    // (parimutuel): an empty pool quotes 50c.
+    const poolTotal = market.pool.outcomeA + market.pool.outcomeB;
+    const priceShare = poolTotal > 0 ? (trade.outcome === "A" ? market.pool.outcomeA : market.pool.outcomeB) / poolTotal : 0.5;
+    const contracts = Math.floor(trade.amount / priceShare);
     // 4b. Minors cannot trade on any market, regardless of affiliation.
     if (agent.birthday) {
       const ageYears = (Date.now() - new Date(agent.birthday).getTime()) / (365.25 * 24 * 3600 * 1000);
@@ -35,10 +40,10 @@ export class TradePipeline {
     // 6. Timing is auditable but intentionally non-blocking.
     const inWindow = market.materialEventAt && new Date(market.materialEventAt).getTime() - new Date(trade.timestamp).getTime() <= this.timingWindowMinutes * 60_000 && new Date(market.materialEventAt).getTime() >= new Date(trade.timestamp).getTime();
     if (inWindow) reasons.push(`Timing flag: trade is within ${this.timingWindowMinutes} minutes of the material event.`);
-    try { await this.payments.transfer(agent.walletId, this.poolAccountId, trade.amount, `Prediction-market trade ${trade.tradeId}`); await this.store.applyClearedTrade(trade.marketId, trade.outcome, trade.amount); }
+    try { await this.payments.transfer(agent.walletId, this.poolAccountId, trade.amount, `Bought $${trade.amount} on '${market.subject}' (${String(trade.outcome).toUpperCase()})`); await this.store.applyClearedTrade(trade.marketId, trade.outcome, trade.amount); }
     catch (error) { return block(`Trade execution failed after checks passed: ${error instanceof Error ? error.message : "unknown payment or pool error"}`); }
-    return this.record(trade.tradeId, inWindow ? "flagged" : "allowed", reasons.length ? reasons : [`All six checks passed; transfer cleared and market pool updated via the ${(this.payments as { rail?: string }).rail ?? "unknown"} rail.`]);
+    return this.record(trade, inWindow ? "flagged" : "allowed", reasons.length ? reasons : [`All six checks passed; transfer cleared and market pool updated via the ${(this.payments as { rail?: string }).rail ?? "unknown"} rail.`], market.subject, contracts);
   }
 
-  private record(tradeId: string, decision: DecisionKind, reasons: string[]) { return this.store.appendDecision({ tradeId, decision, reasons, timestamp: new Date().toISOString() }); }
+  private record(trade: TradeRequest, decision: DecisionKind, reasons: string[], marketSubject?: string, contracts?: number) { return this.store.appendDecision({ tradeId: trade.tradeId, decision, reasons, timestamp: new Date().toISOString(), agentId: trade.agentId, marketId: trade.marketId, marketSubject: marketSubject ?? null, amount: trade.amount, outcome: trade.outcome, contracts: contracts ?? null }); }
 }

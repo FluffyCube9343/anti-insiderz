@@ -513,6 +513,24 @@
 
 /* ACTIONS */
 
+.bank-ledger {
+  margin-top: 1.5rem;
+}
+
+.bank-ledger table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.bank-ledger td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
 .bank-actions {
   align-items:center;
   border-top:1px solid var(--line);
@@ -1136,6 +1154,21 @@
 
     </div>
 
+
+    <div class="bank-ledger">
+
+      <span class="bank-label">
+        Nessie ledger
+      </span>
+
+      <table>
+        <tbody id="bank-ledger-rows">
+          <tr><td colspan="3" class="muted">Loading ledger…</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+
   </div>
 
 
@@ -1426,6 +1459,31 @@ function renderBankingProfile() {
     get("bank-account-name").textContent = account.name;
     get("bank-account-number").textContent = account.type + " •••• " + account.last4;
     get("bank-balance").textContent = money(account.balance);
+
+    // Live ledger from Nessie. The balance is computed from these entries
+    // server-side, so the list and the number can never disagree.
+    (async () => {
+      const rows = document.getElementById("bank-ledger-rows");
+      if (!rows) return;
+      try {
+        const r = await fetch("/api/banking?accountId=" + encodeURIComponent(account.nessieId || account.id));
+        if (!r.ok) throw new Error("ledger unavailable");
+        const data = await r.json();
+        if (typeof data.balance === "number") {
+          account.balance = data.balance;
+          get("bank-balance").textContent = money(data.balance);
+          cash.textContent = money(data.balance);
+        }
+        const entries = Array.isArray(data.ledger) ? data.ledger : [];
+        rows.innerHTML = entries.length
+          ? entries.map(e =>
+              "<tr><td>" + (e.kind === "withdrawal" ? "− " : "+ ") + money(e.amount) + "</td><td>" +
+              (e.description || e.kind) + "</td><td>" + (e.date || "") + "</td></tr>").join("")
+          : '<tr><td colspan="3" class="muted">No ledger activity yet.</td></tr>';
+      } catch (e) {
+        rows.innerHTML = '<tr><td colspan="3" class="muted">Ledger unavailable.</td></tr>';
+      }
+    })();
   }
 
 
@@ -1768,6 +1826,7 @@ function renderAudit() {
 
   const entries =
     getUserAuditLog()
+      .concat(window.__serverAuditEntries || [])
       .sort(
         (a,b) =>
           new Date(b.timestamp) -
@@ -2092,6 +2151,29 @@ function humanReason(reason) {
 
 
 renderAudit();
+
+// Real pipeline trades live in Supabase, never in localStorage - pull this
+// identity's decisions from the audit API and fold them into the same view.
+(async () => {
+  if (typeof traderSession === "undefined" || !traderSession || !traderSession.agentId) return;
+  try {
+    const r = await fetch("/api/audit?agentId=" + encodeURIComponent(traderSession.agentId));
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!Array.isArray(rows)) return;
+    window.__serverAuditEntries = rows.map(d => ({
+      timestamp: d.timestamp,
+      status: String(d.decision || "").toUpperCase(),
+      cost: Number(d.amount || 0),
+      contracts: d.contracts ?? 0,
+      realizedProfit: 0,
+      market: d.marketSubject || "Trade " + String(d.tradeId || "").slice(0, 8),
+      side: d.outcome ? "buy " + String(d.outcome) : null,
+      category: (Array.isArray(d.reasons) ? d.reasons : []).join(" · ") || null,
+    }));
+    renderAudit();
+  } catch (e) { /* leave local view as-is */ }
+})();
 
 
 

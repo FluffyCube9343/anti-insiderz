@@ -1523,6 +1523,15 @@
               </button>
 
 
+              <button
+                class="secondary-button danger-button"
+                id="reset-demo-button"
+                type="button"
+              >
+                Reset demo data
+              </button>
+
+
               <a
                 class="button"
                 href="profile.html"
@@ -2122,7 +2131,7 @@
      * =========================================================
      */
 
-    async function disconnectBankAccount() {
+    async function deleteBankAccount(reset) {
 
       const account =
         getBankAccount();
@@ -2142,7 +2151,7 @@
             await fetch("/api/banking", {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountId: account.nessieId })
+              body: JSON.stringify({ accountId: account.nessieId, reset: reset === true })
             });
 
           if (!res.ok) {
@@ -2172,7 +2181,9 @@
           "ACCOUNT_DISCONNECTED",
 
         description:
-          "Bank account disconnected",
+          reset === true
+            ? "Demo reset: account deleted, trade history wiped"
+            : "Bank account disconnected",
 
         amount:
           0,
@@ -2192,6 +2203,14 @@
       renderBankAccount();
       renderActivity();
 
+    }
+
+    async function disconnectBankAccount() {
+      return deleteBankAccount(false);
+    }
+
+    async function resetDemoData() {
+      return deleteBankAccount(true);
     }
 
 
@@ -2540,6 +2559,13 @@
       .addEventListener(
         "click",
         disconnectBankAccount
+      );
+
+
+    get("reset-demo-button")
+      .addEventListener(
+        "click",
+        resetDemoData
       );
 
 
