@@ -4,7 +4,7 @@
 
 Except half the time that's not insight, it's just who happened to be in the room. And someone on the other end of that trade never knew they didn't have a shot, with no enforcement of trading on public information. 
 
-**Price discovery, without privileged access.**
+# **Price discovery, without privileged access.**
 
 A pari-mutuel prediction market that enforces conflicts of interest *before* money moves. Real markets handle insider risk with policy documents and after-the-fact investigations; here the restrictions live in the trade path itself. Every trade is signed in the browser, passes six enforcement gates, and gets a receipt in a hash-chained audit trail — including the blocked ones.
 
